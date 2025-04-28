@@ -1,5 +1,7 @@
 #lang forge/temporal
 
+option run_sterling "visualizer.js"
+
 // option max_tracelength 16
 // option min_tracelength 16
 
@@ -11,7 +13,7 @@ one sig Alive, Dead extends Modality {}
 //     timer: Int
 // }
 
-// Our starting configuration, ideally initialized via CLI input
+// Our starting configuration, ideally initialized via CLI input (todo)
 one sig Configuration {
     sLiving: set Int -> Int,
     sRemission: set Int -> Int
@@ -61,7 +63,7 @@ pred coreTraces {
     cubeSeed
     initState
     
-    always { validState }
+    // always { validState }
     always { timestep }
 }
 
