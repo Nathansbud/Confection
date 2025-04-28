@@ -1,6 +1,6 @@
 #lang forge/temporal
 
-option run_sterling "visualizer.js"
+option run_sterling "convisualizer.js"
 
 option max_tracelength 8
 
