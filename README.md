@@ -1,5 +1,6 @@
-# Yinzers
-Final project for CSCI 1710 w/ Ishika Tulsian & Yali Sommer
+# Confection: A Cellular Automata Approach to Disease Modeling
+
+CSCI 1710: Logic for Systems final for Ishika Tulsian, Yali Sommer, and Zack Amiton!
 
 # Base Conway Rules (Implemented @ conway.frg)
 [Moore neighborhood with Toroidal boundary conditions]
