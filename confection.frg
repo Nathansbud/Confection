@@ -2,7 +2,13 @@
 
 option run_sterling "con-visualizer.js"
 
-option max_tracelength 8
+option max_tracelength 16
+// Quick Guide: 
+// D = 4
+// H = 8
+// J = 10
+// P = 16
+// T = 20
 
 abstract sig Modality {}
 
@@ -20,6 +26,9 @@ one sig Configuration {
     sInfected: set Int -> Int,
     sSusceptible: set Int -> Int,
     sRecovered: set Int -> Int,
+    
+    // Must be ≤ max_tracelength for non-lasso traces to ensure a lasso
+    // is generated
     sCutoff: one Timestamp
 }
 
@@ -58,18 +67,27 @@ fun neighbors[center: Int -> Int]: Int -> Int -> Int -> Int {
     }
 }
 
+// fun numInfNeighbors[row, col: Int]: Int {
+//     #{(add[row, -1]-> add[col, -1]) & Simulation.infected + 
+//     (add[row, -1]-> col) & Simulation.infected + 
+//     (add[row, -1]-> add[col, 1]) & Simulation.infected + 
+//     (add[row, 1]-> add[col, -1]) & Simulation.infected + 
+//     (add[row, 1]-> col) & Simulation.infected + 
+//     (add[row, 1]-> add[col, 1]) & Simulation.infected + 
+//     (row-> add[col, -1]) & Simulation.infected + 
+//     (row-> col) & Simulation.infected +
+//     (row-> add[col, 1]) & Simulation.infected
+//     }   
+// }
+
 fun numInfNeighbors[row, col: Int]: Int {
-    #{(add[row, -1]-> add[col, -1]) & Simulation.infected + 
-    (add[row, -1]-> col) & Simulation.infected + 
-    (add[row, -1]-> add[col, 1]) & Simulation.infected + 
-    (add[row, 1]-> add[col, -1]) & Simulation.infected + 
-    (add[row, 1]-> col) & Simulation.infected + 
-    (add[row, 1]-> add[col, 1]) & Simulation.infected + 
-    (row-> add[col, -1]) & Simulation.infected + 
-    (row-> col) & Simulation.infected +
-    (row-> add[col, 1]) & Simulation.infected
+    #{
+        ((
+            (add[row, -1] + row + add[row, 1]) -> 
+            (add[col, -1] + col + add[col, 1])
+        ) - (row->col))
+        & Simulation.infected
     }
-    
 }
 
 pred timestep[cutoff: Timestamp] {
@@ -109,8 +127,9 @@ pred cubeSeed {
         0 -> 0 + 
         0 -> 1 +
         1 -> 0
-    
-    Configuration.sCutoff = D
+
+    no Configuration.sRecovered
+    Configuration.sCutoff = P
 }
 
 pred gliderSeed {
@@ -134,7 +153,7 @@ pred infectionSeed {
 }
 
 pred coreTraces {
-    infectionSeed
+    cubeSeed
     initState
 
     always { timestep[Configuration.sCutoff] }
