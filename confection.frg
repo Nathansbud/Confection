@@ -162,3 +162,30 @@ pred coreTraces {
 demoTrace: run {
     coreTraces
 } 
+
+
+-- Talk with Tim:
+// things to do
+    // extreme case -> will die
+    // vaccinated? 
+    // maybe immune unless stronger contagion condition applies
+    // different consequences of different shapes of disease
+    // related work obligations that he wants to hear about
+    // say what you can model and can't
+
+    // synthesise a starting board such that you protect the vulnerable cells?
+    // glider: infection that remains endemic 
+    // explore consequences of different rules
+
+// non-determinism gets much harder --> but do these things instead:
+    -- find me a trace that exhibits a 30% infection rate? 
+    -- count number of infections and take percent?
+
+// for capstone:
+    -- help understanding related work and how that compares with your model
+
+
+// for temporal to fix the looping situation:
+    -- do nothing guard pred to play the non loop 
+    -- USE partial inst !!!!!
+
