@@ -8,9 +8,11 @@ option max_tracelength 16
 // J = 10
 // P = 16
 // T = 20
+// X = 24
 
 abstract sig Timestamp {}
 one sig A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z extends Timestamp {}
+one sig Unreachable, Ignored extends Timestamp {}
 
 // MAJOR TODOS:
 // - Figure out ruleset that is interesting
@@ -39,14 +41,18 @@ one sig Simulation {
 }
 
 fun nextTimestamp[s: Timestamp]: Timestamp {
-    (A -> B + B -> C + C -> D + D -> E + E -> F + F -> G + G -> H + H -> I + I -> J + J -> K + K -> L + L -> M + M -> N + N -> O + O -> P + P -> Q + Q -> R + R -> S + S -> T + T -> U + U -> V + V -> W + W -> X + X -> Y + Y -> Z)[s]
+    (
+        A -> B + B -> C + C -> D + D -> E + E -> F + F -> G + G -> H + H -> I + I -> J + J -> K + K -> L + L -> M + M -> N + N -> O + O -> P + P -> Q + Q -> R + R -> S + S -> T + T -> U + U -> V + V -> W + W -> X + X -> Y + Y -> Z +
+        // Add Unreachable to tag things that should not be given a timestamp in case of > 26 timesteps
+        Z -> A + Unreachable -> Unreachable + Ignored -> Ignored
+    )[s]
 }
 
 
 pred initState {
     Simulation.infected = Configuration.sInfected
     Simulation.recovered = Configuration.sRecovered
-    Simulation.timestamp = A
+    Simulation.timestamp = ((Configuration.sCutoff != Unreachable) => { A } else { Ignored })
     all i, j: Int | {
         i -> j not in (Simulation.infected + Simulation.recovered) <=> i -> j in Simulation.susceptible
     }
@@ -85,9 +91,9 @@ pred timestep[cutoff: Timestamp] {
             // Susceptible becomes infected if it has 2+ infected neighbors, 
             // Infected states stay infected if there are 3+ other infected around them,
             // Infected states recover if there is not enough sickness around them
-            let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] > 1} |
-            let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] > 2} |
-            let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] < 3} | {
+            let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] not in (0 + 1)} |
+            let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] not in (0 + 1 + 2)} |
+            let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1 + 2)} | {
                 Simulation.infected' = newInfected + stayInfected
                 Simulation.recovered' = becomeRecover
                 Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected)
@@ -133,7 +139,6 @@ pred infectionSeed {
     
     no Configuration.sRecovered
     Configuration.sCutoff = H
-    // GETTING UNSAT WHEN NOT DOING H, TRIED J, Y, Z
 }
 
 pred radialSeed {
@@ -162,6 +167,7 @@ pred lineSeed {
     Configuration.sCutoff = P
 }
 
+// Dies out!
 pred diag2Seed {
     Configuration.sInfected = 
         0 -> 0 + 1 -> 1
@@ -170,6 +176,7 @@ pred diag2Seed {
     Configuration.sCutoff = P
 }
 
+// Dies out (I think)
 pred diag3Seed {
     Configuration.sInfected = 
         0 -> 0 + 1 -> 1 + 2 -> 2 
@@ -178,20 +185,49 @@ pred diag3Seed {
     Configuration.sCutoff = P
 }
 
+// Longest seed I found to die out...
+pred bowSeed {
+    Configuration.sInfected = 
+        0 -> 0 + 0 -> 4 + 
+        2 -> 2
+    
+    no Configuration.sRecovered
+    Configuration.sCutoff = P
+}
+
+// Might? Die out if given enough time to run...but 24 seems to kill things :(
+pred nabowSeed {
+    Configuration.sInfected =
+        0 -> 0 + 0 -> 4 + 
+        1 -> 2
+    
+    no Configuration.sRecovered
+    Configuration.sCutoff = X
+}
+
+pred zigSeed {
+    Configuration.sInfected = 
+        0 -> 0 + 1 -> 1 + 
+        0 -> 2
+
+    no Configuration.sRecovered
+    Configuration.sCutoff = P
+}
+
 pred coreTraces {
-    diag3Seed
+    zigSeed
     
     initState
     always { timestep[Configuration.sCutoff] }
 }
-
+ 
 pred novelTraces {
     // Attempt to find a trace that starts with some infection, 
     // and it lasts for at least one state, then dies out!
     no Configuration.sRecovered
     Configuration.sCutoff = P
     
-    // Find a trace the lasts at least...
+    // Find a trace the lasts at least...    
     /* 1 */ some i, j: Int { i -> j in Simulation.infected }
     /* 2 */ next_state { some i, j: Int { i -> j in Simulation.infected } }
     /* 3 */ next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
@@ -205,12 +241,32 @@ pred novelTraces {
     always { timestep[Configuration.sCutoff] }
 }
 
+pred cyclicTraces {
+    no Configuration.sRecovered
+    Configuration.sCutoff = Unreachable
+    
+    some Simulation.infected
+
+    // It must never be the case that Simulation.infected takes over the whole board, 
+    // since this is trivially infected forever :(
+    initState
+    always { 
+        timestep[Configuration.sCutoff]
+        some Simulation.infected
+        some (Simulation.recovered + Simulation.susceptible)
+    }
+}
+
 demoTrace: run {
     coreTraces
 } 
 
 novelTrace: run {
     novelTraces
+}
+
+cyclicTrace: run {
+    cyclicTraces
 }
 
 
