@@ -1,5 +1,4 @@
 // ────── CONSTANTS ────────────────────────────────────────────────
-
 const GRID_SIZE = 16;      
 const CELL_SIZE = 35;    
 const GRID_XY = {x: 50, y: 50}; 
