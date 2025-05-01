@@ -1,7 +1,6 @@
 #lang forge/temporal
 
 option run_sterling "con-visualizer.js"
-
 option max_tracelength 16
 // Quick Guide: 
 // D = 4
@@ -10,16 +9,14 @@ option max_tracelength 16
 // P = 16
 // T = 20
 
-abstract sig Modality {}
-
-// For Conway, we have Alive, Dead; for SIR, we also consider remission states
-one sig Alive, Dead extends Modality {} 
-// sig Remission extends Modality {
-//     timer: Int
-// }
-
 abstract sig Timestamp {}
 one sig A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z extends Timestamp {}
+
+// MAJOR TODOS:
+// - Figure out ruleset that is interesting
+// - Write traces w/ emergent behavior (e.g. dies out, does not die out, remains alive but does not spread)
+// - Decide alternate rulesets to find interesting properties (e.g. "is there a ruleset that lives for 3 generations then dies out?")
+// ...and so on!
 
 // Our starting configuration, ideally initialized via CLI input (todo)
 one sig Configuration {
@@ -66,19 +63,6 @@ fun neighbors[center: Int -> Int]: Int -> Int -> Int -> Int {
         (dr->dc) in (center & ((rows->cols) - (row->col)))
     }
 }
-
-// fun numInfNeighbors[row, col: Int]: Int {
-//     #{(add[row, -1]-> add[col, -1]) & Simulation.infected + 
-//     (add[row, -1]-> col) & Simulation.infected + 
-//     (add[row, -1]-> add[col, 1]) & Simulation.infected + 
-//     (add[row, 1]-> add[col, -1]) & Simulation.infected + 
-//     (add[row, 1]-> col) & Simulation.infected + 
-//     (add[row, 1]-> add[col, 1]) & Simulation.infected + 
-//     (row-> add[col, -1]) & Simulation.infected + 
-//     (row-> col) & Simulation.infected +
-//     (row-> add[col, 1]) & Simulation.infected
-//     }   
-// }
 
 fun numInfNeighbors[row, col: Int]: Int {
     #{
