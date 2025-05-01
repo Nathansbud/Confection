@@ -136,16 +136,82 @@ pred infectionSeed {
     // GETTING UNSAT WHEN NOT DOING H, TRIED J, Y, Z
 }
 
-pred coreTraces {
-    cubeSeed
-    initState
+pred radialSeed {
+    // Under 2-3 ruleset, this should be self-sustaining
+    Configuration.sInfected = 
+        0 -> 0 + 0 -> 1 + 0 -> 2
+    
+    no Configuration.sRecovered
+    Configuration.sCutoff = P
+}
 
+pred baseballSeed {
+    Configuration.sInfected = 
+        0 -> 0 + 0 -> 2 + 
+        2 -> 0 + 2 -> 2
+    
+    no Configuration.sRecovered
+    Configuration.sCutoff = P
+}
+
+pred lineSeed {
+    Configuration.sInfected = 
+        0 -> 0 + 0 -> 2 + 0 -> 4
+    
+    no Configuration.sRecovered
+    Configuration.sCutoff = P
+}
+
+pred diag2Seed {
+    Configuration.sInfected = 
+        0 -> 0 + 1 -> 1
+    
+    no Configuration.sRecovered
+    Configuration.sCutoff = P
+}
+
+pred diag3Seed {
+    Configuration.sInfected = 
+        0 -> 0 + 1 -> 1 + 2 -> 2 
+    
+    no Configuration.sRecovered
+    Configuration.sCutoff = P
+}
+
+pred coreTraces {
+    diag3Seed
+    
+    initState
+    always { timestep[Configuration.sCutoff] }
+}
+
+pred novelTraces {
+    // Attempt to find a trace that starts with some infection, 
+    // and it lasts for at least one state, then dies out!
+    no Configuration.sRecovered
+    Configuration.sCutoff = P
+    
+    // Find a trace the lasts at least...
+    /* 1 */ some i, j: Int { i -> j in Simulation.infected }
+    /* 2 */ next_state { some i, j: Int { i -> j in Simulation.infected } }
+    /* 3 */ next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    /* 4 */ next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    /* 5 */ next_state next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    // Steps before dying out
+
+    eventually { no Simulation.infected } 
+
+    initState
     always { timestep[Configuration.sCutoff] }
 }
 
 demoTrace: run {
     coreTraces
 } 
+
+novelTrace: run {
+    novelTraces
+}
 
 
 -- Talk with Tim:
