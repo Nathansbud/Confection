@@ -84,10 +84,6 @@ pred timestep[cutoff: Timestamp] {
     Simulation.timestamp != cutoff => {
         // let susNeighbors = neighbors[Simulation.susceptible] | 
         let infNeighbors = neighbors[Simulation.infected] | {
-            // TODO: THIS IS NOT RIGHT LOGIC :(
-            // We need the neighbors 
-
-
             // Susceptible becomes infected if it has 2+ infected neighbors, 
             // Infected states stay infected if there are 3+ other infected around them,
             // Infected states recover if there is not enough sickness around them
@@ -95,6 +91,30 @@ pred timestep[cutoff: Timestamp] {
             let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] not in (0 + 1 + 2)} |
             let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1 + 2)} | {
                 Simulation.infected' = newInfected + stayInfected
+                Simulation.recovered' = becomeRecover
+                Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected)
+            }
+        }
+
+        Simulation.timestamp' = nextTimestamp[Simulation.timestamp]
+    } else {
+        Simulation.timestamp' = Simulation.timestamp
+        Simulation.infected' = Simulation.infected
+        Simulation.susceptible' = Simulation.susceptible
+        Simulation.recovered' = Simulation.recovered
+    }
+}
+
+pred bbTimestep[cutoff: Timestamp] {
+    Simulation.timestamp != cutoff => {
+        // let susNeighbors = neighbors[Simulation.susceptible] | 
+        let infNeighbors = neighbors[Simulation.infected] | {
+            // Susceptible becomes infected if it has 2+ infected neighbors, 
+            // Infected states stay infected if there are 3+ other infected around them,
+            // Infected states recover if there is not enough sickness around them
+            let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] in (2)} |
+            let becomeRecover = {row, col: Int | (row->col) in Simulation.infected} | {
+                Simulation.infected' = newInfected
                 Simulation.recovered' = becomeRecover
                 Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected)
             }
@@ -257,6 +277,27 @@ pred cyclicTraces {
     }
 }
 
+pred bOscillatorSeed {
+    Configuration.sInfected = 
+        0 -> 0 + 0 -> 1 +
+        1 -> 0 + 1 -> 1
+    
+    Configuration.sRecovered = 
+        0 -> -1 + 
+        1 -> 2 + 
+        2 -> 0 + 
+        -1 -> 1
+
+    Configuration.sCutoff = Unreachable
+}
+
+pred brainOscillatorTraces {
+    bOscillatorSeed
+    
+    initState
+    always { bbTimestep[Configuration.sCutoff] }
+}
+
 demoTrace: run {
     coreTraces
 } 
@@ -267,6 +308,10 @@ novelTrace: run {
 
 cyclicTrace: run {
     cyclicTraces
+}
+
+brainTrace: run {
+    brainOscillatorTraces
 }
 
 
