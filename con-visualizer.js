@@ -5,7 +5,8 @@ const GRID_XY = {x: 50, y: 50};
 const STATE_COL = {
     susceptible: "#8E8E8E",
     infected: "#FF4500",
-    recovered: "#00C96B"
+    recovered: "#00C96B",
+    died: "#000000"
 };
 
 const BUTTONS = {
@@ -15,7 +16,7 @@ const BUTTONS = {
 }
 const BTN_W = 80;
 const BTN_H = 30;
-const BTN_Y = GRID_XY.y + GRID_SIZE * CELL_SIZE + 20;              
+const BTN_Y = GRID_XY.y + GRID_SIZE * CELL_SIZE + 20;
 const BTN_X0 = (GRID_XY.x + GRID_SIZE * CELL_SIZE)/2 - 90;                
 // -------------------------------------------------------------------
 
