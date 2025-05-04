@@ -60,18 +60,52 @@ test suite for numInfNeighbors {
 }
 
 test suite for wellformed {
+    wellformedConflict: assert {
+        wellformed
+        Simulation.infected = 0 -> 0
+        Simulation.susceptible = 0 -> 0
+    } is unsat
 
+    // Wellformed makes no assertions on deadness
+    wellformedNoBehaviorForDead: assert {
+        wellformed
+        Simulation.infected = 0 -> 0
+        Simulation.dead = 0 -> 0
+    } is sat
+
+    // wellformedHolds: assert { 
+    //     Configuration.sCutoff = Unreachable
+    //     initState
+    //     always {
+    //         wellformed
+    //         timestep[Configuration.Unreachable] 
+    //     }
+    // } is sat
+
+    assert { wellformedDead } is sufficient for wellformed
+
+    // TODO
 }
 
 test suite for wellformedDead {
+    assert { wellformed } is necessary for wellformedDead
 
+    // TODO
+}
+
+pred alwaysWellformed { 
+    always { wellformed }
 }
 
 test suite for timestep {
+    assert {
+        wellformed
+        coreTraces
+    } is sufficient for alwaysWellformed
 
+    // TODO
 }
 
 test suite for deadTimestep {    
-
+    // TODO
 }
-
