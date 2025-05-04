@@ -53,7 +53,6 @@ fun nextTimestamp[s: Timestamp]: Timestamp {
     )[s]
 }
 
-
 pred initState {
     Simulation.infected = Configuration.sInfected
     Simulation.incubation = Configuration.sInfected -> (1)
@@ -62,7 +61,11 @@ pred initState {
     Simulation.timestamp = ((Configuration.sCutoff != Unreachable) => { A } else { Ignored })
     
     all i, j: Int | {
-        i -> j not in (Simulation.infected + Simulation.recovered) <=> i -> j in Simulation.susceptible
+        i -> j not in (
+            Simulation.infected + 
+            Simulation.recovered +
+            Simulation.dead
+        ) <=> i -> j in Simulation.susceptible
     }
 }
 
@@ -90,18 +93,15 @@ fun numInfNeighbors[row, col: Int]: Int {
 
 pred timestep[cutoff: Timestamp] {
     Simulation.timestamp != cutoff => {
-        // let susNeighbors = neighbors[Simulation.susceptible] | 
-        let infNeighbors = neighbors[Simulation.infected] | {
-            // Susceptible becomes infected if it has 2+ infected neighbors, 
-            // Infected states stay infected if there are 3+ other infected around them,
-            // Infected states recover if there is not enough sickness around them
-            let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] not in (0 + 1)} |
-            let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] not in (0 + 1 + 2)} |
-            let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1 + 2)} | {
-                Simulation.infected' = newInfected + stayInfected
-                Simulation.recovered' = becomeRecover
-                Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected)
-            }
+        // Susceptible becomes infected if it has 2+ infected neighbors, 
+        // Infected states stay infected if there are 3+ other infected around them,
+        // Infected states recover if there is not enough sickness around them
+        let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] not in (0 + 1)} |
+        let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] not in (0 + 1 + 2)} |
+        let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1 + 2)} | {
+            Simulation.infected' = newInfected + stayInfected
+            Simulation.recovered' = becomeRecover
+            Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected)
         }
 
         Simulation.timestamp' = nextTimestamp[Simulation.timestamp]
@@ -115,42 +115,58 @@ pred timestep[cutoff: Timestamp] {
     }
 }
 
+pred wellformedDead {
+    // No pairwise intersection between sets; if this is ever not the case,
+    // something is greviously wrongs
+    no (Simulation.infected & Simulation.susceptible) 
+    no (Simulation.infected & Simulation.recovered)
+    no (Simulation.infected & Simulation.dead)
+    no (Simulation.susceptible & Simulation.recovered)
+    no (Simulation.susceptible & Simulation.dead)
+    no (Simulation.recovered & Simulation.dead)
+}
+
+pred wellformed { 
+    no (Simulation.infected & Simulation.susceptible) 
+    no (Simulation.infected & Simulation.recovered)
+    no (Simulation.susceptible & Simulation.recovered)
+}
+
 pred deadTimestep[cutoff: Timestamp] {
     Simulation.timestamp != cutoff => {
-        // let susNeighbors = neighbors[Simulation.susceptible] | 
-        let infNeighbors = neighbors[Simulation.infected] | {
-            // Susceptible becomes infected if it has 2+ infected neighbors, 
-            // Infected states stay infected if there are 3+ other infected around them,
-            // Infected states recover if there is not enough sickness around them
-            let newDead = {row, col: Int | (row->col) in Simulation.infected and Simulation.incubation[row][col] not in (0 + 1 + 2)} |
-            let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] not in (0 + 1)} |
-            let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] not in (0 + 1 + 2)} |
-            let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1 + 2)} | {
-                Simulation.infected' = (newInfected + stayInfected) - newDead
-                Simulation.dead' = (Simulation.dead + newDead)
-                Simulation.recovered' = becomeRecover
-                Simulation.susceptible' = (
-                    Simulation.recovered + 
-                    (Simulation.susceptible - newInfected)
-                ) - newDead
+        // Susceptible becomes infected if it has 2+ infected neighbors, 
+        // Infected states stay infected if there are 3+ other infected around them,
+        // Infected states recover if there is not enough sickness around them
+        let newDead = {row, col: Int | (row->col) in Simulation.infected and Simulation.incubation[row][col] not in (0 + 1 + 2)} |
+        let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] not in (0 + 1)} |
+        let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] not in (0 + 1 + 2)} |
+        let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1 + 2)} | {
+            Simulation.infected' = (newInfected + stayInfected) - newDead
+            Simulation.recovered' = becomeRecover - newDead
+            Simulation.dead' = (Simulation.dead + newDead)        
+            Simulation.susceptible' = (
+                // Recovered cells have a 1-period incubation without immunity considerations
+                Simulation.recovered + 
+                // Susceptible cells ignore newInfected and newDead
+                (Simulation.susceptible - newInfected)
+            )
 
-                // @ Ishika or Yali is there a better way to do this lol, I tried to do 
-                //      Simulation.incubation'[newInfected] = 1
-                //      all s: stayInfected { Simulation.incubation'[s] = add[1, Simulation.incubation[s]] }
-                // ... but that did not work :(
-                
-                // ...increase / initialize incubations
-                all i, j: Int {
-                    (i -> j) in Simulation.infected' => {
-                        (i -> j) in stayInfected => {
-                            Simulation.incubation'[i][j] = add[1, Simulation.incubation[i][j]]
-                        } else {
-                            Simulation.incubation'[i][j] = 1
-                        }
+            // @ Ishika or Yali is there a better way to do this lol, I tried to do 
+            //      Simulation.incubation'[newInfected] = 1
+            //      all s: stayInfected { Simulation.incubation'[s] = add[1, Simulation.incubation[s]] }
+            // ... but that did not work :(
+            
+            // ...increase / initialize incubations
+            all i, j: Int {
+                (i -> j) in Simulation.infected' => {
+                    (i -> j) in stayInfected => {
+                        Simulation.incubation'[i][j] = add[1, Simulation.incubation[i][j]]
                     } else {
-                        no Simulation.incubation'[i][j]
-                    } 
-                }
+                        Simulation.incubation'[i][j] = 1
+                    }
+                } else {
+                    no Simulation.incubation'[i][j]
+                } 
             }
         }
 
@@ -160,23 +176,21 @@ pred deadTimestep[cutoff: Timestamp] {
         Simulation.infected' = Simulation.infected
         Simulation.susceptible' = Simulation.susceptible
         Simulation.dead' = Simulation.dead
+        Simulation.incubation' = Simulation.incubation
         Simulation.recovered' = Simulation.recovered
     }
 }
 
 pred bbTimestep[cutoff: Timestamp] {
     Simulation.timestamp != cutoff => {
-        // let susNeighbors = neighbors[Simulation.susceptible] | 
-        let infNeighbors = neighbors[Simulation.infected] | {
-            // Susceptible becomes infected if it has 2+ infected neighbors, 
-            // Infected states stay infected if there are 3+ other infected around them,
-            // Infected states recover if there is not enough sickness around them
-            let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] in (2)} |
-            let becomeRecover = {row, col: Int | (row->col) in Simulation.infected} | {
-                Simulation.infected' = newInfected
-                Simulation.recovered' = becomeRecover
-                Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected)
-            }
+        // Susceptible becomes infected if it has 2+ infected neighbors, 
+        // Infected states stay infected if there are 3+ other infected around them,
+        // Infected states recover if there is not enough sickness around them
+        let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] in (2)} |
+        let becomeRecover = {row, col: Int | (row->col) in Simulation.infected} | {
+            Simulation.infected' = newInfected
+            Simulation.recovered' = becomeRecover
+            Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected)
         }
 
         Simulation.timestamp' = nextTimestamp[Simulation.timestamp]
