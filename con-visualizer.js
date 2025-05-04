@@ -6,7 +6,7 @@ const STATE_COL = {
     susceptible: "#8E8E8E",
     infected: "#FF4500",
     recovered: "#00C96B",
-    died: "#000000"
+    dead: "#000000"
 };
 
 const BUTTONS = {

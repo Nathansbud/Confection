@@ -1,7 +1,7 @@
 #lang forge/temporal
 
 option run_sterling "con-visualizer.js"
-option max_tracelength 8
+option max_tracelength 24
 // Quick Guide: 
 // D = 4
 // H = 8
@@ -373,6 +373,86 @@ pred diesTrace {
     always { deadTimestep[Configuration.sCutoff] }
 }
 
+pred twoGroupSpreadSeed {
+    Configuration.sInfected =
+        0 -> -1 + 0 -> 1 +
+        1 -> -1 + 1 -> 1
+    
+    no Configuration.sDead
+    no Configuration.sRecovered
+    Configuration.sCutoff = X
+}
+
+pred twoGroupSpread {
+    twoGroupSpreadSeed
+    initState
+    always { deadTimestep[Configuration.sCutoff] }
+}
+
+pred triangleSeed {
+    Configuration.sInfected =
+        0 -> -1 + 0 -> 1 +
+        0 -> 0 + 0 -> -2 +
+        0 -> 2 + 1 -> 2 + 
+        1 -> -2 + 2 -> -1 +
+        2 -> 1 + 3 -> 0
+    
+    no Configuration.sDead
+    no Configuration.sRecovered
+    Configuration.sCutoff = X
+}
+
+pred triangleSpread {
+    triangleSeed
+    initState
+    always { deadTimestep[Configuration.sCutoff] }
+}
+
+pred longLineSeed {
+    Configuration.sInfected =
+        0 -> -1 + 1 -> 0 +
+        2 -> -1 + 3 -> 0 +
+        4 -> -1 + 5 -> 0 + 
+        6 -> -1 + 7 -> 0 +
+        -8 -> -1 + -7 -> 0 + 
+        -6 -> -1 + -5 -> 0 +
+        -4 -> -1 + -3 -> 0 +
+        -2 -> -1 + -1 -> 0
+    
+    no Configuration.sDead
+    no Configuration.sRecovered
+    Configuration.sCutoff = X
+}
+
+pred longLineSpread {
+    longLineSeed
+    initState
+    always { deadTimestep[Configuration.sCutoff] }
+}
+
+pred diagonalLineSeed {
+    Configuration.sInfected =
+        -8 -> -8 + -7 -> -7 +
+        -6 -> -6 + -5 -> -5 +
+        -4 -> -4 + -3 -> -3 + 
+        -2 -> -2 + -1 -> -1 +
+        0 -> 0 + 1 -> 1 + 
+        2 -> 2 + 3 -> 3 +
+        4 -> 4 + 5 -> 5 +
+        6 -> 6 + 7 -> 7
+    
+    no Configuration.sDead
+    no Configuration.sRecovered
+    Configuration.sCutoff = X
+}
+
+pred diagonalLineSpread {
+    diagonalLineSeed
+    initState
+    always { deadTimestep[Configuration.sCutoff] }
+}
+
+
 demoTrace: run {
     coreTraces
 } 
@@ -387,6 +467,22 @@ cyclicTrace: run {
 
 deadTrace: run {
     diesTrace
+}
+
+twoGroupSpreadTrace: run {
+    twoGroupSpread
+}
+
+triangleTrace: run {
+    triangleSpread
+}
+
+longLineTrace: run {
+    longLineSpread
+}
+
+diagonalLineTrace: run {
+    diagonalLineSpread
 }
 
 brainTrace: run {
