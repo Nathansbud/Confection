@@ -615,7 +615,7 @@ halfPopDeadTrace: run {
 }
 
 cyclicTrace: run {
-    cyclicTraces
+    cyclicTraces 
 }
 
 deadTrace: run {

@@ -24,10 +24,10 @@ const BTN_X0 = (GRID_XY.x + GRID_SIZE * CELL_SIZE)/2 - 90;
 
 // Offsets the Forge Int atom ids (-8 to 7) to 0 to 15 indices
 const OFFSET = 8;
-const shift  = (i) => i + OFFSET;
+const shift = (i) => i + OFFSET;
 
-let index   = 0;                 
-const maxT  = instances.length; 
+let index = 0;                 
+const maxT = instances.length; 
 const stage = new Stage(); 
 
 let gridObj;      
@@ -41,27 +41,49 @@ let statusBox;
  */
 function create_grid(inst) {
   const g = new Grid({
-    grid_location   : GRID_XY,
-    cell_size       : {x_size: CELL_SIZE, y_size: CELL_SIZE},
-    grid_dimensions : {x_size: GRID_SIZE,  y_size: GRID_SIZE}
+    grid_location: GRID_XY,
+    cell_size: {x_size: CELL_SIZE, y_size: CELL_SIZE},
+    grid_dimensions: {x_size: GRID_SIZE,  y_size: GRID_SIZE}
   });
 
+
   for (const f of inst._fields) {
-    if (!STATE_COL[f._id]) continue;         
-    const colour = STATE_COL[f._id];
+    if (f._id === "protected") continue;
+    if (!STATE_COL[f._id]) continue; 
+
+    const fill = STATE_COL[f._id];
 
     for (const tup of f._tuples) {
-      const row = shift(parseInt(tup._atoms[1]._id));
-      const col = shift(parseInt(tup._atoms[2]._id));
+      const row = shift(+tup._atoms[1]._id);
+      const col = shift(+tup._atoms[2]._id);
 
       g.add({x: row, y: col},
             new Rectangle({
-              width  : CELL_SIZE,
-              height : CELL_SIZE,
-              color  : colour
+              width: CELL_SIZE,
+              height: CELL_SIZE,
+              color: fill
             }));
     }
   }
+
+  // creates the protected purple outline on the cells
+  const protField = inst._fields.find(f => f._id === "protected");
+  if (protField) {
+    for (const tup of protField._tuples) {
+      const row = shift(+tup._atoms[1]._id);
+      const col = shift(+tup._atoms[2]._id);
+
+      g.add({x: row, y: col},
+            new Rectangle({
+              width: CELL_SIZE,
+              height: CELL_SIZE,
+              color: "none",
+              borderColor: STATE_COL.protected,
+              borderWidth: 3
+            }));
+    }
+  }
+
   return g;
 }
 
@@ -85,10 +107,10 @@ function reset() { index = 0; render(); }
 
 // ---------------- SET UP -------------------------------------------
 statusBox = new TextBox({
-  text     : `Timestep 1 / ${maxT}`,
-  coords   : {x: GRID_XY.x + GRID_SIZE*CELL_SIZE/2, y: 20},
-  color    : 'black',
-  fontSize : 16
+  text: `Timestep 1 / ${maxT}`,
+  coords: {x: GRID_XY.x + GRID_SIZE*CELL_SIZE/2, y: 20},
+  color: 'black',
+  fontSize: 16
 });
 stage.add(statusBox);
 
@@ -97,20 +119,20 @@ Object.keys(BUTTONS).forEach((label, i) => {
   const x0 = BTN_X0 + i*(BTN_W + 10);
 
   stage.add(new Rectangle({
-    coords : {x: x0, y: BTN_Y},
-    width  : BTN_W,
-    height : BTN_H,
-    color  : '#cccccc'
+    coords: {x: x0, y: BTN_Y},
+    width: BTN_W,
+    height: BTN_H,
+    color: '#cccccc'
   }));
 
   stage.add(new TextBox({
-    text     : label,
-    coords   : {x: x0 + BTN_W/2, y: BTN_Y + BTN_H/2},
-    color    : 'black',
-    fontSize : 14,
-    events   : [{
-      event    : 'click',
-      callback : BUTTONS[label]
+    text: label,
+    coords: {x: x0 + BTN_W/2, y: BTN_Y + BTN_H/2},
+    color: 'black',
+    fontSize: 14,
+    events: [{
+      event: 'click',
+      callback: BUTTONS[label]
     }]
   }));
 });
