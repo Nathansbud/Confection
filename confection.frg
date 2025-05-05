@@ -512,7 +512,7 @@ pred diesSeed {
 }
 
 pred diesTrace {
-    diesSeed
+    lineSeed
     initState
     always { deadTimestep[Configuration.sCutoff] }
 }
@@ -672,3 +672,18 @@ demoVaxTrace: run {
     -- do nothing guard pred to play the non loop 
     -- USE partial inst !!!!!
 
+
+
+// TRACES WE WANT:
+-- Finite length X Traces
+-- Cyclic Traces (is this same as oscilattors?)
+-- Fast Death Traces
+-- NoVax vs Vax
+-- "Herd Immunity" (vax seed prevents spread)
+-- Disease that infects everyone but nobody dies
+
+// ????
+-- Gliders??
+
+// rip
+-- nondeterminism
