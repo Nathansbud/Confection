@@ -27,6 +27,7 @@ one sig Configuration {
     sRecovered: set Int -> Int,
     sDead: set Int -> Int,
     sIncubation: set Int -> Int -> Int,
+    sVaccinated: set Int -> Int,
 
     // Must be ≤ max_tracelength for non-lasso traces to ensure a lasso
     // is generated
@@ -35,12 +36,15 @@ one sig Configuration {
 
 // Over each timestep, our simulation should evolve based on the game of life ruleset
 one sig Simulation {
+    var protected: set Int -> Int,
+
     var infected: set Int -> Int,
     var incubation: set Int -> Int -> Int,
 
     var susceptible: set Int -> Int,
     var recovered: set Int -> Int,
     var dead: set Int -> Int,
+    var vaccinated: set Int -> Int,
 
     var timestamp: one Timestamp
 }
@@ -58,26 +62,17 @@ pred initState {
     Simulation.incubation = Configuration.sInfected -> (1)
     Simulation.recovered = Configuration.sRecovered
     Simulation.dead = Configuration.sDead
+    Simulation.vaccinated = Configuration.sVaccinated
     Simulation.timestamp = ((Configuration.sCutoff != Unreachable) => { A } else { Ignored })
+    no Simulation.protected
     
     all i, j: Int | {
         i -> j not in (
             Simulation.infected + 
             Simulation.recovered +
-            Simulation.dead
+            Simulation.dead + 
+            Simulation.vaccinated
         ) <=> i -> j in Simulation.susceptible
-    }
-}
-
-// Logic adapted from https://github.com/tnelson/Forge/blob/main/forge/examples/basic/gameOfLife.frg,
-// as a means to create the relation: (A, B) -> (C, D) for all neighbors (C, D) around (A, B)
-fun neighbors[center: Int -> Int]: Int -> Int -> Int -> Int {
-    { row, col, dr, dc: Int | 
-        let rows = (add[row, 1] + row + add[row, -1]) |
-        let cols = (add[col, 1] + col + add[col, -1]) |
-        // Takes the set of row / cols ± 1 from the current cell, and then 
-        // weeds out the center cell and concats (A, B) -> (C, D)
-        (dr->dc) in (center & ((rows->cols) - (row->col)))
     }
 }
 
@@ -91,7 +86,21 @@ fun numInfNeighbors[row, col: Int]: Int {
     }
 }
 
+fun numVaxNeighbors[row, col: Int]: Int {
+    #{
+        ((
+            (add[row, -1] + row + add[row, 1]) -> 
+            (add[col, -1] + col + add[col, 1])
+        ) - (row->col))
+        & Simulation.vaccinated
+    }
+}
+
 pred timestep[cutoff: Timestamp] {
+    no Simulation.dead
+    no Simulation.vaccinated
+    no Simulation.protected
+
     Simulation.timestamp != cutoff => {
         // Susceptible becomes infected if it has 2+ infected neighbors, 
         // Infected states stay infected if there are 3+ other infected around them,
@@ -101,7 +110,7 @@ pred timestep[cutoff: Timestamp] {
         let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1 + 2)} | {
             Simulation.infected' = newInfected + stayInfected
             Simulation.recovered' = becomeRecover
-            Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected)
+            Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected) 
         }
 
         Simulation.timestamp' = nextTimestamp[Simulation.timestamp]
@@ -133,6 +142,8 @@ pred wellformed {
 }
 
 pred deadTimestep[cutoff: Timestamp] {
+    no Simulation.protected
+    
     Simulation.timestamp != cutoff => {
         // Susceptible becomes infected if it has 2+ infected neighbors, 
         // Infected states stay infected if there are 3+ other infected around them,
@@ -177,6 +188,60 @@ pred deadTimestep[cutoff: Timestamp] {
         Simulation.susceptible' = Simulation.susceptible
         Simulation.dead' = Simulation.dead
         Simulation.incubation' = Simulation.incubation
+        Simulation.recovered' = Simulation.recovered
+    }
+}
+
+pred vaxTimestep[cutoff: Timestamp] {
+    Simulation.timestamp != cutoff => {
+        // Susceptible becomes infected if it has 2+ infected neighbors, 
+        // Infected states stay infected if there are 3+ other infected around them,
+        // Infected states recover if there is not enough sickness around them
+        let newDead = {row, col: Int | (row->col) in Simulation.infected and Simulation.incubation[row][col] not in (0 + 1 + 2)} |
+        let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] not in (0 + 1)} |
+        let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] not in (0 + 1 + 2)} |
+        let isProtected = {row, col: Int | (row->col) in Simulation.susceptible and numVaxNeighbors[row, col] in (-1 + 2 + 3 + 4 + 5 + 6 + 7)} |
+        let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1 + 2)} |
+        let usedInfected = newInfected - isProtected | {
+            Simulation.protected' = isProtected
+            Simulation.infected' = (usedInfected + stayInfected) - newDead
+            Simulation.recovered' = becomeRecover - newDead
+            Simulation.dead' = (Simulation.dead + newDead)        
+            Simulation.susceptible' = (
+                // Recovered cells have a 1-period incubation without immunity considerations
+                Simulation.recovered + 
+                // Susceptible cells ignore newInfected and newDead
+                (Simulation.susceptible - usedInfected)
+            )
+
+            // @ Ishika or Yali is there a better way to do this lol, I tried to do 
+            //      Simulation.incubation'[newInfected] = 1
+            //      all s: stayInfected { Simulation.incubation'[s] = add[1, Simulation.incubation[s]] }
+            // ... but that did not work :(
+            
+            // ...increase / initialize incubations
+            all i, j: Int {
+                (i -> j) in Simulation.infected' => {
+                    (i -> j) in stayInfected => {
+                        Simulation.incubation'[i][j] = add[1, Simulation.incubation[i][j]]
+                    } else {
+                        Simulation.incubation'[i][j] = 1
+                    }
+                } else {
+                    no Simulation.incubation'[i][j]
+                } 
+            }
+        }
+
+        Simulation.timestamp' = nextTimestamp[Simulation.timestamp]
+        Simulation.vaccinated' = Simulation.vaccinated
+    } else {
+        Simulation.timestamp' = Simulation.timestamp
+        Simulation.infected' = Simulation.infected
+        Simulation.susceptible' = Simulation.susceptible
+        Simulation.dead' = Simulation.dead
+        Simulation.incubation' = Simulation.incubation
+        Simulation.vaccinated' = Simulation.vaccinated
         Simulation.recovered' = Simulation.recovered
     }
 }
@@ -318,7 +383,8 @@ pred novelTraces {
     // Attempt to find a trace that starts with some infection, 
     // and it lasts for at least one state, then dies out!
     no Configuration.sRecovered
-    Configuration.sCutoff = P
+    no Configuration.sDead
+    Configuration.sCutoff = H
     
     // Find a trace the lasts at least...    
     /* 1 */ some i, j: Int { i -> j in Simulation.infected }
@@ -331,7 +397,7 @@ pred novelTraces {
     eventually { no Simulation.infected } 
 
     initState
-    always { timestep[Configuration.sCutoff] }
+    always { deadTimestep[Configuration.sCutoff] }
 }
 
 pred fastDeathTraces {
@@ -349,7 +415,11 @@ pred fastDeathTraces {
     // /* 5 */ next_state next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
     // Steps before all dead, still decidiing how many necessary
 
-    eventually { no Simulation.infected and no Simulation.susceptible and no Simulation.recovered} 
+    eventually { 
+        no Simulation.infected
+        no Simulation.susceptible 
+        no Simulation.recovered
+    } 
 
     initState
     always { deadTimestep[Configuration.sCutoff] }
@@ -367,11 +437,31 @@ pred halfPopDeadTraces {
     /* 5 */ next_state next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
     // Steps before end
 
-    eventually { no Simulation.infected and #{Simulation.susceptible} = 32 and no Simulation.recovered and #{Simulation.dead} = 32} 
+    eventually { no Simulation.infected and #{Simulation.susceptible} = #{Simulation.dead} and no Simulation.recovered}
     initState
     always { deadTimestep[Configuration.sCutoff] }
 }
 
+pred demoVaxTraces {
+    Configuration.sVaccinated = 
+        0 -> 0 +
+        0 -> 1 +
+        0 -> 2 +
+        0 -> 3
+    
+    Configuration.sInfected = 
+        1 -> 0 + 
+        1 -> 2 + 
+        1 -> 4
+        
+    no Configuration.sRecovered
+    no Configuration.sDead
+
+    Configuration.sCutoff = H
+    
+    initState
+    always { vaxTimestep[Configuration.sCutoff] }
+}
 
 
 pred cyclicTraces {
@@ -552,6 +642,10 @@ brainTrace: run {
     brainOscillatorTraces
 }
 
+
+demoVaxTrace: run {
+    demoVaxTraces
+}
 
 -- Talk with Tim:
 // things to do
