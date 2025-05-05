@@ -1,7 +1,7 @@
 #lang forge/temporal
 
 option run_sterling "con-visualizer.js"
-option max_tracelength 24
+option max_tracelength 8
 // Quick Guide: 
 // D = 4
 // H = 8
@@ -334,6 +334,46 @@ pred novelTraces {
     always { timestep[Configuration.sCutoff] }
 }
 
+pred fastDeathTraces {
+
+    // Attempt to find most potent diseases, where all cells die in the shortest amount of time.
+    no Configuration.sRecovered
+    Configuration.sCutoff = H   
+    /* 1 */ some i, j: Int { i -> j in Simulation.infected }
+    /* 2 */ next_state { some i, j: Int { i -> j in Simulation.infected } }
+
+    //ONCE ITS RUNNING, I WANT TO RESTRICT THE # OF CELLS IN THE INIT STATE, SO THAT ITS NOT JUST ALL INFECTED AS A SEED. LIKE #(INFECTED) < 16?
+
+    // /* 3 */ next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    // /* 4 */ next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    // /* 5 */ next_state next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    // Steps before all dead, still decidiing how many necessary
+
+    eventually { no Simulation.infected and no Simulation.susceptible and no Simulation.recovered} 
+
+    initState
+    always { deadTimestep[Configuration.sCutoff] }
+}
+
+pred halfPopDeadTraces {
+
+    // Attempt to find a disease eliminating exactly half the population
+    no Configuration.sRecovered
+    Configuration.sCutoff = H   
+    /* 1 */ some i, j: Int { i -> j in Simulation.infected }
+    /* 2 */ next_state { some i, j: Int { i -> j in Simulation.infected } }
+    /* 3 */ next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    /* 4 */ next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    /* 5 */ next_state next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    // Steps before end
+
+    eventually { no Simulation.infected and #{Simulation.susceptible} = 32 and no Simulation.recovered and #{Simulation.dead} = 32} 
+    initState
+    always { deadTimestep[Configuration.sCutoff] }
+}
+
+
+
 pred cyclicTraces {
     no Configuration.sRecovered
     Configuration.sCutoff = Unreachable
@@ -444,7 +484,8 @@ pred longLineSpread {
     always { deadTimestep[Configuration.sCutoff] }
 }
 
-pred diagonalLineSeed {
+//seed where everyone dies besides the initial infected population.
+pred allDeadButInitInfectedSeed { // still seeing the bug with dead cells moving here
     Configuration.sInfected =
         -8 -> -8 + -7 -> -7 +
         -6 -> -6 + -5 -> -5 +
@@ -460,8 +501,8 @@ pred diagonalLineSeed {
     Configuration.sCutoff = X
 }
 
-pred diagonalLineSpread {
-    diagonalLineSeed
+pred allDeadButInitInfectedSpread {
+    allDeadButInitInfectedSeed
     initState
     always { deadTimestep[Configuration.sCutoff] }
 }
@@ -473,6 +514,14 @@ demoTrace: run {
 
 novelTrace: run {
     novelTraces
+}
+
+fastDeathTrace: run {
+    fastDeathTraces
+}
+
+halfPopDeadTrace: run {
+    halfPopDeadTraces
 }
 
 cyclicTrace: run {
@@ -495,8 +544,8 @@ longLineTrace: run {
     longLineSpread
 }
 
-diagonalLineTrace: run {
-    diagonalLineSpread
+allDeadButInitInfectedTrace: run {
+    allDeadButInitInfectedSpread
 }
 
 brainTrace: run {
