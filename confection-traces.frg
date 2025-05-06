@@ -151,15 +151,17 @@ pred cyclicTraces {
     }
 }
 
-finiteTrace1: run {
-
+pred coreTraces {
     zigSeed
     initState
     always { 
         wellformed
         timestep[Configuration.sCutoff] 
     }
+}
 
+finiteTrace1: run {
+    coreTraces
 } for timeline26
 
 finiteTrace2: run {
