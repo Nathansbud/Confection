@@ -1,5 +1,6 @@
 #lang forge/temporal 
-open "confection.frg"
+open "confection-core.frg"
+open "confection-traces.frg"
 
 pred infNeighborsSeed {
     Simulation.infected = 
