@@ -161,7 +161,20 @@ test suite for wellformedDead {
 }
 
 test suite for initState {
-    // TODO
+
+    initSat: assert { initState } is sat for timeline3
+
+    initWellformedSat: assert {
+        initState
+        wellformed
+    } is sat for timeline3
+
+    -- sim and config should match
+    noInfMismatch: assert {
+        Configuration.sInfected = 0->0
+        initState
+        Simulation.infected = 1->1
+    } is unsat for timeline3
 }
 
 // pred alwaysWellformed { 
