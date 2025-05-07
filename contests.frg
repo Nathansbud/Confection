@@ -8,7 +8,7 @@ open "confection-traces.frg"
 */
 
 -- tinier version of timeline26 for testing purposes
-inst timeline3 {
+inst Timeline3 {
   Timestamp = `T0 + `T1 + `T2 + `Unreachable
   next = `T0 -> `T1  + `T1  -> `T2  + `T2  -> `T0 + `Unreachable -> `Unreachable
 }
@@ -114,7 +114,7 @@ test suite for wellformed {
             wellformed
             timestep[Configuration.sCutoff] 
         }
-    } is sat for timeline3
+    } is sat for Timeline3
 
     assert { wellformedDead } is sufficient for wellformed
 
@@ -144,13 +144,13 @@ test suite for wellformedDead {
         wellformedDead
         Simulation.susceptible = 0 -> 0
         Simulation.dead = 0 -> 0
-    } is unsat for timeline3
+    } is unsat for Timeline3
 
     wfdNoRecDead: assert {
         wellformedDead
         Simulation.recovered = 0 -> 0
         Simulation.dead = 0 -> 0
-    } is unsat for timeline3
+    } is unsat for Timeline3
 
     wfdPreserved: assert {
         Configuration.sCutoff = `Unreachable
@@ -160,24 +160,24 @@ test suite for wellformedDead {
             wellformedDead
             deadTimestep[Configuration.sCutoff]
         }
-    } is sat for timeline3
+    } is sat for Timeline3
 }
 
 test suite for initState {
 
-    initSat: assert { initState } is sat for timeline3
+    initSat: assert { initState } is sat for Timeline3
 
     initWellformedSat: assert {
         initState
         wellformed
-    } is sat for timeline3
+    } is sat for Timeline3
 
     -- sim and config should match
     noInfMismatch: assert {
         Configuration.sInfected = 0->0
         initState
         Simulation.infected = 1->1
-    } is unsat for timeline3
+    } is unsat for Timeline3
 }
 
 pred alwaysWellformed { 
@@ -202,7 +202,7 @@ test suite for timestep {
         Simulation.timestamp != Configuration.sCutoff
         timestep[Configuration.sCutoff]
         Simulation.timestamp' = nextTimestamp[Simulation.timestamp]
-    } is sat for timeline3
+    } is sat for Timeline3
     
     -- doesn't update after reaching cutoff
     tsStopAtCutoff: assert {
@@ -210,7 +210,7 @@ test suite for timestep {
         Simulation.timestamp = Configuration.sCutoff
         timestep[Configuration.sCutoff]
         Simulation.timestamp' = Simulation.timestamp
-    } is sat for timeline3
+    } is sat for Timeline3
 
     coreTracesWellformed: assert {
         wellformed
@@ -220,7 +220,7 @@ test suite for timestep {
     timestepAlwaysWellformed: assert { 
         initState 
         always { preservedWellformed[Configuration.sCutoff] }
-    } is sat for timeline3 
+    } is sat for Timeline3 
 
     -- sufficiency check
     noSpecialSets: assert {
@@ -231,21 +231,21 @@ test suite for timestep {
         no Simulation.protected
 
         implies timestep[Configuration.sCutoff]
-    } is sat for timeline3
+    } is sat for Timeline3
 
     -- newly infected can only come from infected and susceptible sets
     subsetInf: assert {
         all ts: Timestamp | {
             timestep[Configuration.sCutoff] implies {Simulation.infected' in (Simulation.infected + Simulation.susceptible)}
         } 
-    } is sat for timeline3
+    } is sat for Timeline3
 
     -- newly recovered can only come from infected set
     subsetRec: assert {
         all ts: Timestamp | {
             timestep[Configuration.sCutoff] implies {Simulation.recovered' in Simulation.infected}
         } 
-    } is sat for timeline3
+    } is sat for Timeline3
 
     -- susceptible loses exactly the newInf people and gains from recovered set
     subsetSus: assert {
@@ -255,7 +255,7 @@ test suite for timestep {
                 Simulation.susceptible' = Simulation.susceptible - newInf + Simulation.recovered
             }
         } 
-    } is sat for timeline3
+    } is sat for Timeline3
 
     -- if no infected, all should stay same
     noInfs: assert {
@@ -265,7 +265,7 @@ test suite for timestep {
         Simulation.infected' = Simulation.infected
         Simulation.susceptible' = Simulation.susceptible
         Simulation.recovered' = Simulation.recovered
-    } is sat for timeline3
+    } is sat for Timeline3
 
     -- all infected, so stays infected
     infAllStay: assert {
@@ -279,7 +279,7 @@ test suite for timestep {
         wellformed
         timestep[Configuration.sCutoff]
         Simulation.infected' = Simulation.infected
-    } is sat for timeline3
+    } is sat for Timeline3
 }
 
 pred deadWellformedNext { 
@@ -309,7 +309,7 @@ test suite for deadTimestep {
         Simulation.timestamp != Configuration.sCutoff
         deadTimestep[Configuration.sCutoff]
         Simulation.timestamp' = nextTimestamp[Simulation.timestamp]
-    } is sat for timeline3
+    } is sat for Timeline3
     
     -- doesn't update after reaching cutoff
     deadtsStopAtCutoff: assert {
@@ -317,7 +317,7 @@ test suite for deadTimestep {
         Simulation.timestamp = Configuration.sCutoff
         deadTimestep[Configuration.sCutoff]
         Simulation.timestamp' = Simulation.timestamp
-    } is sat for timeline3
+    } is sat for Timeline3
 
     -- no protected cells in this ruleset
     deadnoProtected: assert {
@@ -325,26 +325,26 @@ test suite for deadTimestep {
         no Simulation.protected
         deadTimestep[Configuration.sCutoff]
         no Simulation.protected'
-    } is sat for timeline3
+    } is sat for Timeline3
 
     -- dead set can only increase, not decrease in size
     deadMonotone: assert {
         initState
         deadTimestep[Configuration.sCutoff]
         Simulation.dead in Simulation.dead'
-    } is sat for timeline3
+    } is sat for Timeline3
 
     deadInfSubset: assert {
         initState
         deadTimestep[Configuration.sCutoff]
         Simulation.infected' in (Simulation.infected + Simulation.susceptible) - (Simulation.dead' - Simulation.dead)
-    } is sat for timeline3
+    } is sat for Timeline3
 
     -- always a wellformed transition made
     deadTimestepAlwaysWellformed: assert { 
         initState 
         always { deadPreservedWellformed[Configuration.sCutoff] }
-    } is sat for timeline3 
+    } is sat for Timeline3 
 
 
     // TODO: test incubation logic
@@ -362,14 +362,14 @@ test suite for vaxTimestep {
         Simulation.timestamp != Configuration.sCutoff
         stepVax
         Simulation.timestamp' = nextTimestamp[Simulation.timestamp]
-    } is sat for timeline3
+    } is sat for Timeline3
 
     vaxTsFreeze: assert {
         initState
         Simulation.timestamp = Configuration.sCutoff
         stepVax
         Simulation.timestamp' = Simulation.timestamp
-    } is sat for timeline3
+    } is sat for Timeline3
 
     -- vaccinated never changes
     vaccStable: assert { Simulation.vaccinated' = Simulation.vaccinated } is necessary for stepVax
@@ -378,9 +378,9 @@ test suite for vaxTimestep {
         initState
         stepVax
         Simulation.infected' in (Simulation.infected + Simulation.susceptible) - Simulation.protected'
-    } is sat for timeline3
+    } is sat for Timeline3
 
     -- takes ages to run did not finish running on my laptop!!
-    vaxDeadMonotone: assert { Simulation.dead in Simulation.dead' } is necessary for stepVax for timeline3
+    vaxDeadMonotone: assert { Simulation.dead in Simulation.dead' } is necessary for stepVax for Timeline3
 
 }

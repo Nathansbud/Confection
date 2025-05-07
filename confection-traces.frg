@@ -9,7 +9,7 @@ option max_tracelength 26
 -- partial instance to define sequence of time stamps. 
 -- next relation ensures theres a loop the sequence to work with temporal forge
 -- optimizes with the solver for fast trace times
-inst timeline26 {
+inst Timeline25 {
   Timestamp = `T0 + `T1 + `T2 + `T3 + `T4 + `T5 + `T6 + `T7 +
     `T8 + `T9 + `T10 + `T11 + `T12 + `T13 + `T14 + `T15 +
     `T16 + `T17 + `T18 + `T19 + `T20 + `T21 + `T22 + `T23 +
@@ -22,6 +22,16 @@ inst timeline26 {
     `T16 -> `T17 + `T17 -> `T18 + `T18 -> `T19 + `T19 -> `T20 +
     `T20 -> `T21 + `T21 -> `T22 + `T22 -> `T23 + `T23 -> `T24 +
     `T24 -> `T0 + `Unreachable -> `Unreachable
+    
+    // // Limit ints to -4 thru 3 (bit-width 8)
+    #Int = 3
+}
+
+inst Timeline8 {
+  Timestamp = `T0 + `T1 + `T2 + `T3 + `T4 + `T5 + `T6 + `T7 + `Unreachable
+
+    next = `T0 -> `T1  + `T1  -> `T2  + `T2  -> `T3  + `T3  -> `T4 +
+    `T4 -> `T5  + `T5  -> `T6  + `T6  -> `T7  + `T7  -> `T0 + `Unreachable -> `Unreachable
     
     // // Limit ints to -4 thru 3 (bit-width 8)
     #Int = 3
@@ -161,7 +171,7 @@ pred coreTraces {
 
 finiteTrace1: run {
     coreTraces
-} for timeline26
+} for Timeline25
 
 finiteTrace2: run {
 
@@ -172,7 +182,7 @@ finiteTrace2: run {
         timestep[Configuration.sCutoff] 
     }
 
-} for timeline26
+} for Timeline25
 
 finiteTrace3: run {
 
@@ -183,7 +193,7 @@ finiteTrace3: run {
         timestep[Configuration.sCutoff] 
     }
 
-} for timeline26
+} for Timeline25
 
 novelTrace: run {
 
@@ -194,7 +204,7 @@ novelTrace: run {
         timestep[Configuration.sCutoff] 
     }
 
-} for timeline26
+} for Timeline25
 
 ChaoticTrace1: run {
 
@@ -205,7 +215,7 @@ ChaoticTrace1: run {
         timestep[Configuration.sCutoff] 
     }
 
-} for timeline26
+} for Timeline25
 
 ChaoticTrace2: run {
 
@@ -216,7 +226,7 @@ ChaoticTrace2: run {
         timestep[Configuration.sCutoff] 
     }
 
-} for timeline26
+} for Timeline25
 
 ChaoticTrace3: run {
 
@@ -227,17 +237,43 @@ ChaoticTrace3: run {
         timestep[Configuration.sCutoff] 
     }
 
-} for timeline26
+} for Timeline25
 
 demoVaxTrace: run {
     demoVaxTraces
-} for timeline26
+} for Timeline25
 
 cyclicTrace: run {
     cyclicTraces 
-} for timeline26
+} for Timeline25
 
+pred commonColdSeed {
+    all i, j: Int {
+        eventually {
+            (i -> j) in Simulation.infected
+        }
+    }
 
+    always { no Simulation.dead }
+    initState
+
+    Configuration.sCutoff = `T15
+}
+
+commonColdDeadTraces: run {
+    commonColdSeed
+    
+    always { deadTimestep[Configuration.sCutoff ]}
+    eventually { no Simulation.infected }
+} for Timeline25
+
+// This is trivially unsat if any vax exist, and is identical to the dead case otherwise!
+// commonColdVaxTraces: run {
+//     commonColdSeed
+    
+//     always { vaxTimestep[Configuration.sCutoff ]}
+//     eventually { no Simulation.infected }
+// } for Timeline25
 
 // TRACES WE WANT:
 -- Finite length X Traces --> done
