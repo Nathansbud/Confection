@@ -4,11 +4,7 @@ open "confection-core.frg"
 
 option run_sterling "con-visualizer.js"
 option max_tracelength 26
-
-/*
-insert file description
-*/
-
+// option bitwidth 3
 
 -- partial instance to define sequence of time stamps. 
 -- next relation ensures theres a loop the sequence to work with temporal forge
@@ -26,6 +22,9 @@ inst timeline26 {
     `T16 -> `T17 + `T17 -> `T18 + `T18 -> `T19 + `T19 -> `T20 +
     `T20 -> `T21 + `T21 -> `T22 + `T22 -> `T23 + `T23 -> `T24 +
     `T24 -> `T0 + `Unreachable -> `Unreachable
+    
+    // // Limit ints to -4 thru 3 (bit-width 8)
+    #Int = 3
 }
 
 -- stable seed, population recovers fully within 8 steps
@@ -50,8 +49,8 @@ pred diag2Seed {
 -- stable seed, population recovers
 pred bowSeed {
     Configuration.sInfected = 
-        0 -> 0 + 0 -> 4 + 
-        2 -> 2
+        0 -> -1 + 0 -> 3 + 
+        2 -> 1
     
     no Configuration.sRecovered
     Configuration.sCutoff = `T15
@@ -60,8 +59,8 @@ pred bowSeed {
 -- doesn't recover within 25 steps, cool pattern though
 pred nabowSeed {
     Configuration.sInfected =
-        -1 -> 0 + -1 -> 4 + 
-        0 -> 2
+        -1 -> -1 + -1 -> 3 + 
+        0 -> 1
     
     no Configuration.sRecovered
     Configuration.sCutoff = `T24
@@ -115,15 +114,15 @@ pred novelTraces {
 -- demo vaccinated trace
 pred demoVaxTraces {
     Configuration.sVaccinated = 
+        0 -> -1 +
         0 -> 0 +
         0 -> 1 +
-        0 -> 2 +
-        0 -> 3
+        0 -> 2
     
     Configuration.sInfected = 
-        1 -> 0 + 
-        1 -> 2 + 
-        1 -> 4
+        1 -> -1 + 
+        1 -> 1 + 
+        1 -> 3
         
     no Configuration.sRecovered
     no Configuration.sDead

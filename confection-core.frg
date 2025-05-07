@@ -189,7 +189,7 @@ pred vaxTimestep[cutoff: Timestamp] {
         let newDead = {row, col: Int | (row->col) in Simulation.infected and Simulation.incubation[row][col] not in (0 + 1 + 2)} |
         let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] not in (0 + 1)} |
         let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] not in (0 + 1 + 2)} |
-        let isProtected = {row, col: Int | (row->col) in Simulation.susceptible and numVaxNeighbors[row, col] in (-1 + 2 + 3 + 4 + 5 + 6 + 7)} |
+        let isProtected = {row, col: Int | (row->col) in Simulation.susceptible and numVaxNeighbors[row, col] not in (0 + 1)} |
         let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1 + 2)} |
         let usedInfected = newInfected - isProtected | {
             Simulation.protected' = isProtected
