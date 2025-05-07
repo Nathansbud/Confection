@@ -4,6 +4,7 @@ open "confection-core.frg"
 
 option run_sterling "con-visualizer.js"
 option max_tracelength 26
+// option solver Glucose
 // option bitwidth 3
 
 -- partial instance to define sequence of time stamps. 
@@ -187,6 +188,38 @@ pred cyclicTraces {
     }
 }
 
+pred oscillator {
+
+    no Configuration.sRecovered
+    no Configuration.sDead
+    no Configuration.sVaccinated
+    Configuration.sCutoff = `T7
+
+    initState
+
+    always {
+        timestep[Configuration.sCutoff]
+        wellformed
+        no Simulation.protected
+        no Simulation.vaccinated
+        no Simulation.dead
+        some Simulation.infected
+        some Simulation.susceptible
+    }
+
+    next_state {
+        (Simulation.infected != Configuration.sInfected) or
+        (Simulation.recovered != Configuration.sRecovered) or
+        (Simulation.susceptible != Configuration.sSusceptible)
+    }
+
+    eventually {
+        Simulation.infected = Configuration.sInfected
+        Simulation.recovered = Configuration.sRecovered
+        Simulation.susceptible = Configuration.sSusceptible
+    }
+}
+
 pred coreTraces {
     zigSeed
     initState
@@ -284,6 +317,10 @@ demoVaxTrace: run {
 cyclicTrace: run {
     cyclicTraces 
 } for Timeline25
+
+oscillatorTrace: run {
+    oscillator
+} for Timeline8
 
 pred commonColdSeed {
     all i, j: Int {
