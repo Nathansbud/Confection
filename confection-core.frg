@@ -181,7 +181,6 @@ pred deadTimestep[cutoff: Timestamp] {
 }
 
 -- added on vax cells to timestep rules
-
 pred vaxTimestep[cutoff: Timestamp] {
     Simulation.timestamp != cutoff => {
         // Susceptible becomes infected if it has 2+ infected neighbors, 

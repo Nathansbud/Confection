@@ -241,7 +241,7 @@ cyclicTrace: run {
 
 
 // TRACES WE WANT:
--- Finite length X Traces
+-- Finite length X Traces --> done
 -- Cyclic Traces (is this same as oscilattors?)
 -- Fast Death Traces
 -- NoVax vs Vax
