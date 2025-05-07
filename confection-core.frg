@@ -296,7 +296,7 @@ pred recoveryTimestep[cutoff: Timestamp] {
         let usedInfected = newInfected - isProtected | {
             Simulation.protected' = isProtected
             Simulation.infected' = (usedInfected + stayInfected) - newDead
-            Simulation.recovered' = becomeRecover - newDead - doneRecover
+            Simulation.recovered' = becomeRecover - newDead + (Simulation.recovered - doneRecover)
             Simulation.dead' = (Simulation.dead + newDead)        
             Simulation.susceptible' = (
                 // Recovered cells have a 1-period incubation without immunity considerations
