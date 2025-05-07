@@ -244,8 +244,50 @@ pred coreTraces {
     }
 }
 
+pred coreTracesInfectious {
+    zigSeed
+    initState
+    always { 
+        wellformed
+        timestepMoreInfectious[Configuration.sCutoff] 
+    }
+}
+
+pred coreTracesRecoveryLong {
+    zigSeed
+    initState
+    always { 
+        wellformed
+        recoveryTimestep[Configuration.sCutoff] 
+    }
+}
+
+pred coreTracesdead {
+    zigSeed
+    initState
+    no Configuration.sVaccinated
+    no Configuration.sDead
+    always { 
+        wellformed
+        deadTimestep[Configuration.sCutoff] 
+    }
+}
+
+
 finiteTrace1: run {
     coreTraces
+} for Timeline25
+
+finiteTrace1Infectious: run {
+    coreTracesInfectious
+} for Timeline25
+
+finiteTrace1dead: run {
+    coreTracesdead
+} for Timeline25
+
+finiteTrace1LongRecovery: run {
+    coreTracesRecoveryLong
 } for Timeline25
 
 finiteTrace2: run {
@@ -409,12 +451,9 @@ constantInfectionRateTraces: run {
 -- Finite length X Traces --> done
 -- Cyclic Traces (is this same as oscilattors?)
 -- Fast Death Traces --> done-ish, can tweak!!
--- NoVax vs Vax
--- "Herd Immunity" (vax seed prevents spread)
--- Disease that infects everyone but nobody dies --> done
+-- NoVax vs Vax --> done - ish
+-- Disease that infects everyone but nobody dies --> in progress
 
 // ????
--- Gliders??
+-- Gliders --> done
 
-// rip
--- nondeterminism

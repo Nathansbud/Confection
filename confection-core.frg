@@ -12,6 +12,7 @@ one sig Configuration {
     sDead: set Int -> Int,
     sVaccinated: set Int -> Int,
     sIncubation: set Int -> Int -> Int,
+    sBounceback: set Int -> Int -> Int,
 
     sCutoff: one Timestamp
 }
@@ -25,6 +26,8 @@ one sig Simulation {
     var vaccinated: set Int -> Int,
 
     var incubation: set Int -> Int -> Int,
+    var bounceback: set Int -> Int -> Int,
+
     var protected: set Int -> Int,
 
     var timestamp: one Timestamp
@@ -40,6 +43,7 @@ pred initState {
     -- set simulation = configuration at the start
     Simulation.infected = Configuration.sInfected
     Simulation.incubation = Configuration.sInfected -> (1)
+    Simulation.bounceback = Configuration.sRecovered -> (1)
     Simulation.recovered = Configuration.sRecovered
     Simulation.dead = Configuration.sDead
     Simulation.vaccinated = Configuration.sVaccinated
@@ -112,6 +116,36 @@ pred timestep[cutoff: Timestamp] {
         let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] not in (0 + 1)} |
         let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] not in (0 + 1 + 2)} |
         let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1 + 2)} | {
+            Simulation.infected' = newInfected + stayInfected
+            Simulation.recovered' = becomeRecover
+            Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected) 
+        }
+
+        Simulation.timestamp' = nextTimestamp[Simulation.timestamp]
+    } else {
+        Simulation.timestamp' = Simulation.timestamp
+        Simulation.infected' = Simulation.infected
+        Simulation.incubation' = Simulation.incubation
+        Simulation.susceptible' = Simulation.susceptible
+        Simulation.dead' = Simulation.dead
+        Simulation.recovered' = Simulation.recovered
+    }
+}
+
+-- baseline timestep rules with S-I-R cells only, no dead or vaccinated, 
+-- higher contagion ruleset !!!
+pred timestepMoreInfectious[cutoff: Timestamp] {
+    no Simulation.dead
+    no Simulation.vaccinated
+    no Simulation.protected
+
+    Simulation.timestamp != cutoff => {
+        // Susceptible becomes infected if it has 1+ infected neighbors, 
+        // Infected states stay infected if there are 2+ other infected around them,
+        // Infected states recover if there is not enough sickness around them
+        let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] not in (0)} |
+        let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] not in (0 + 1)} |
+        let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1)} | {
             Simulation.infected' = newInfected + stayInfected
             Simulation.recovered' = becomeRecover
             Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected) 
@@ -234,4 +268,72 @@ pred vaxTimestep[cutoff: Timestamp] {
         Simulation.recovered' = Simulation.recovered
     }
 }
+
+-- added on vax cells to timestep rules
+pred recoveryTimestep[cutoff: Timestamp] {
+    Simulation.timestamp != cutoff => {
+        // Susceptible becomes infected if it has 2+ infected neighbors, 
+        // Infected states stay infected if there are 3+ other infected around them,
+        // Infected states recover if there is not enough sickness around them
+        let newDead = {row, col: Int | (row->col) in Simulation.infected and Simulation.incubation[row][col] not in (0 + 1 + 2)} |
+        let doneRecover = {row, col: Int | (row->col) in Simulation.recovered and Simulation.bounceback[row][col] not in (0 + 1 + 2)} |
+        let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] not in (0 + 1)} |
+        let stayInfected = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] not in (0 + 1 + 2)} |
+        let isProtected = {row, col: Int | (row->col) in Simulation.susceptible and numVaxNeighbors[row, col] not in (0 + 1)} |
+        let becomeRecover = {row, col: Int | (row->col) in Simulation.infected and numInfNeighbors[row, col] in (0 + 1 + 2)} |
+        let usedInfected = newInfected - isProtected | {
+            Simulation.protected' = isProtected
+            Simulation.infected' = (usedInfected + stayInfected) - newDead
+            Simulation.recovered' = becomeRecover - newDead - doneRecover
+            Simulation.dead' = (Simulation.dead + newDead)        
+            Simulation.susceptible' = (
+                // Recovered cells have a 1-period incubation without immunity considerations
+                doneRecover + 
+                // Susceptible cells ignore newInfected and newDead
+                (Simulation.susceptible - usedInfected)
+            )
+
+            // @ Ishika or Yali is there a better way to do this lol, I tried to do 
+            //      Simulation.incubation'[newInfected] = 1
+            //      all s: stayInfected { Simulation.incubation'[s] = add[1, Simulation.incubation[s]] }
+            // ... but that did not work :(
+            
+            // ...increase / initialize incubations
+            all i, j: Int {
+                (i -> j) in Simulation.infected' => {
+                    (i -> j) in stayInfected => {
+                        Simulation.incubation'[i][j] = add[1, Simulation.incubation[i][j]]
+                    } else {
+                        Simulation.incubation'[i][j] = 1
+                    }
+                } else {
+                    no Simulation.incubation'[i][j]
+                } 
+
+                // I do not believe in this but who knows
+                (i -> j) in Simulation.recovered' => {
+                    (i -> j) in Simulation.recovered => {
+                        Simulation.bounceback'[i][j] = add[1, Simulation.bounceback[i][j]]
+                    } else {
+                        Simulation.bounceback'[i][j] = 1
+                    }
+                } else {
+                    no Simulation.bounceback'[i][j]
+                }
+            }
+        }
+
+        Simulation.timestamp' = nextTimestamp[Simulation.timestamp]
+        Simulation.vaccinated' = Simulation.vaccinated
+    } else {
+        Simulation.timestamp' = Simulation.timestamp
+        Simulation.infected' = Simulation.infected
+        Simulation.susceptible' = Simulation.susceptible
+        Simulation.dead' = Simulation.dead
+        Simulation.incubation' = Simulation.incubation
+        Simulation.vaccinated' = Simulation.vaccinated
+        Simulation.recovered' = Simulation.recovered
+    }
+}
+
 
