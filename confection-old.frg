@@ -38,6 +38,26 @@ pred lineSeed {
     Configuration.sCutoff = P
 }
 
+pred bbTimestep[cutoff: Timestamp] {
+    Simulation.timestamp != cutoff => {
+        // Susceptible becomes infected if it has 2+ infected neighbors, 
+        // Infected states stay infected if there are 3+ other infected around them,
+        // Infected states recover if there is not enough sickness around them
+        let newInfected = {row, col: Int | (row->col) in Simulation.susceptible and numInfNeighbors[row, col] in (2)} |
+        let becomeRecover = {row, col: Int | (row->col) in Simulation.infected} | {
+            Simulation.infected' = newInfected
+            Simulation.recovered' = becomeRecover
+            Simulation.susceptible' = Simulation.recovered + (Simulation.susceptible - newInfected)
+        }
+
+        Simulation.timestamp' = nextTimestamp[Simulation.timestamp]
+    } else {
+        Simulation.timestamp' = Simulation.timestamp
+        Simulation.infected' = Simulation.infected
+        Simulation.susceptible' = Simulation.susceptible
+        Simulation.recovered' = Simulation.recovered
+    }
+}
 
 // Dies out (I think)
 pred diag3Seed {

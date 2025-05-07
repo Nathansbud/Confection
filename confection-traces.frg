@@ -204,36 +204,36 @@ pred cyclicTraces {
 }
 
 pred oscillator {
+    // Commenting out for now
+    // no Configuration.sRecovered
+    // no Configuration.sDead
+    // no Configuration.sVaccinated
+    // Configuration.sCutoff = `T7
 
-    no Configuration.sRecovered
-    no Configuration.sDead
-    no Configuration.sVaccinated
-    Configuration.sCutoff = `T7
+    // initState
 
-    initState
+    // always {
+    //     timestep[Configuration.sCutoff]
+    //     wellformed
+    //     no Simulation.protected
+    //     no Simulation.vaccinated
+    //     no Simulation.dead
+    //     some Simulation.infected
+    //     some Simulation.susceptible
+    // }
 
-    always {
-        timestep[Configuration.sCutoff]
-        wellformed
-        no Simulation.protected
-        no Simulation.vaccinated
-        no Simulation.dead
-        some Simulation.infected
-        some Simulation.susceptible
-    }
+    // next_state {
+    //     (Simulation.infected != Configuration.sInfected) or
+    //     (Simulation.recovered != Configuration.sRecovered) or
+    //     (Simulation.susceptible != Configuration.sSusceptible)
+    // }
 
-    next_state {
-        (Simulation.infected != Configuration.sInfected) or
-        (Simulation.recovered != Configuration.sRecovered) or
-        (Simulation.susceptible != Configuration.sSusceptible)
-    }
-
-    eventually {
-        Simulation.infected = Configuration.sInfected
-        Simulation.recovered = Configuration.sRecovered
-        Simulation.susceptible = Configuration.sSusceptible
-        Simulation.timestep != `T0
-    }
+    // eventually {
+    //     Simulation.infected = Configuration.sInfected
+    //     Simulation.recovered = Configuration.sRecovered
+    //     Simulation.susceptible = Configuration.sSusceptible
+    //     Simulation.timestep != `T0
+    // }
 }
 
 pred coreTraces {
@@ -450,7 +450,7 @@ constantInfectionRateTraces: run {
 
 // TRACES WE WANT:
 -- Finite length X Traces --> done
--- Cyclic Traces (is this same as oscilattors?)
+-- Cyclic Traces (is this same as oscilattors?) -> we have a glider / no-vax glider, but no real "oscillators"
 -- Fast Death Traces --> done-ish, can tweak!!
 -- NoVax vs Vax --> done - ish
 -- Disease that infects everyone but nobody dies --> in progress
