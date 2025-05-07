@@ -1,5 +1,5 @@
 // ────── CONSTANTS ────────────────────────────────────────────────
-const GRID_SIZE = 16;      
+const GRID_SIZE = 8;      
 const CELL_SIZE = 35;    
 const GRID_XY = {x: 50, y: 50}; 
 const STATE_COL = {
@@ -23,7 +23,7 @@ const BTN_X0 = (GRID_XY.x + GRID_SIZE * CELL_SIZE)/2 - 90;
 // -------------------------------------------------------------------
 
 // Offsets the Forge Int atom ids (-8 to 7) to 0 to 15 indices
-const OFFSET = 8;
+const OFFSET = 4;
 const shift = (i) => i + OFFSET;
 
 let index = 0;                 
