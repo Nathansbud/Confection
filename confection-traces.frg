@@ -34,8 +34,7 @@ inst Timeline8 {
     next = `T0 -> `T1  + `T1  -> `T2  + `T2  -> `T3  + `T3  -> `T4 +
     `T4 -> `T5  + `T5  -> `T6  + `T6  -> `T7  + `T7  -> `T0 + `Unreachable -> `Unreachable
     
-    // // Limit ints to -4 thru 3 (bit-width 8)
-    #Int = 3
+    // Limit ints to -4 thru 3 (bit-width 8)
 }
 
 -- stable seed, population recovers fully within 8 steps
@@ -115,7 +114,8 @@ pred workingGliderBigSeed {
 pred gliderVaxWallSeed {
     Configuration.sInfected = -1 -> -1 + 0 -> -1 + 1 -> 0 + -2 -> 0 + 2 -> 0 + -3 -> 0 + 3 -> 1 + -4 -> 1
     Configuration.sRecovered = -1 -> 0 + 0 -> 0 + 1 -> 1+ -2 -> 1 + 2 -> 1 + -3 -> 1 + 3 -> 2 + -4 -> 2
-    Configuration.sVaccinated = -4 -> -4 + -3 -> -4 + -2 -> -4 + -1 -> -4 + 0 -> -4 + 1 -> -4 + 2 -> -4 + 3 -> -4
+    Configuration.sVaccinated = -4 -> -4 + -2 -> -4 + 0 -> -4 + 2 -> -4
+    // Configuration.sVaccinated = -4 -> -4 + -3 -> -4 + -2 -> -4 + -1 -> -4 + 0 -> -4 + 1 -> -4 + 2 -> -4 + 3 -> -4
     no Configuration.sDead
     Configuration.sCutoff = `T24
 }
@@ -232,6 +232,7 @@ pred oscillator {
         Simulation.infected = Configuration.sInfected
         Simulation.recovered = Configuration.sRecovered
         Simulation.susceptible = Configuration.sSusceptible
+        Simulation.timestep != `T0
     }
 }
 
@@ -380,7 +381,7 @@ pred commonColdSeed {
 commonColdDeadTraces: run {
     commonColdSeed
     
-    always { timestep[Configuration.sCutoff ]}
+    always { deadTimestep[Configuration.sCutoff ]}
 } for Timeline25
 
 pred constantInfectionRate { -- unsat
