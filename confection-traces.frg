@@ -121,6 +121,33 @@ pred novelTraces {
     always { deadTimestep[Configuration.sCutoff] }
 }
 
+pred fastDeathTraces {
+
+    // Attempt to find most potent diseases, where all cells die in the shortest amount of time.
+    no Configuration.sRecovered
+    no Configuration.sVaccinated
+    #{Configuration.sInfected} < 3
+    #{Configuration.sDead} < 3 --dont seem to be owrking correctly, but do seem to restrict the num a bit?
+    
+    Configuration.sCutoff = `T7
+    /* 1 */ some i, j: Int { i -> j in Simulation.infected }
+    /* 2 */ next_state { some i, j: Int { i -> j in Simulation.infected } }
+
+    // /* 3 */ next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    // /* 4 */ next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    // /* 5 */ next_state next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
+    // Steps before all dead, still decidiing how many necessary
+
+    eventually { 
+        no Simulation.infected
+        no Simulation.susceptible 
+        no Simulation.recovered
+    } 
+
+    initState
+    always { deadTimestep[Configuration.sCutoff] }
+}
+
 -- demo vaccinated trace
 pred demoVaxTraces {
     Configuration.sVaccinated = 
@@ -205,6 +232,17 @@ novelTrace: run {
     }
 
 } for Timeline25
+
+fastDeathTrace: run {
+
+    fastDeathTraces
+    initState
+    always { 
+        wellformed
+        deadTimestep[Configuration.sCutoff] 
+    }
+
+} for timeline26
 
 ChaoticTrace1: run {
 
