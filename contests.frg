@@ -295,10 +295,13 @@ pred deadPreservedWellformed[tick: Timestamp] {
     wellformedDead and deadTimestep[tick] implies deadWellformedNext 
 }
 
+-- helper pred for deadTimestep testing
+pred stepDead { deadTimestep[Configuration.sCutoff] }
+
 test suite for deadTimestep {    
 
     // todo: figure out some necessary/sufficiency assertions
-    // assert { all ts: Timestamp | no Simulation.protected } is necessary for deadTimestep[ts]
+    deadNoProtected: assert { no Simulation.protected } is necessary for stepDead
 
     -- timestamp correctly updates
     deadtsAdvances: assert {
@@ -378,6 +381,6 @@ test suite for vaxTimestep {
     } is sat for timeline3
 
     -- takes ages to run did not finish running on my laptop!!
-    // vaxDeadMonotone: assert { Simulation.dead in Simulation.dead' } is necessary for stepVax for timeline3
+    vaxDeadMonotone: assert { Simulation.dead in Simulation.dead' } is necessary for stepVax for timeline3
 
 }
