@@ -99,6 +99,26 @@ pred gliderSeed {
 
 }
 
+pred workingGliderSmallSeed {
+    Configuration.sInfected = -1 -> -1 + 0 -> -1 + 1 -> 0 + -2 -> 0
+    Configuration.sRecovered = -1 -> 0 + 0 -> 0 + 1 -> 1+ -2 -> 1
+    Configuration.sCutoff = `T24
+}
+
+pred workingGliderBigSeed {
+    Configuration.sInfected = -1 -> -1 + 0 -> -1 + 1 -> 0 + -2 -> 0 + 2 -> 0 + -3 -> 0 + 3 -> 1 + -4 -> 1
+    Configuration.sRecovered = -1 -> 0 + 0 -> 0 + 1 -> 1+ -2 -> 1 + 2 -> 1 + -3 -> 1 + 3 -> 2 + -4 -> 2
+    Configuration.sCutoff = `T24
+}
+
+pred gliderVaxWallSeed {
+    Configuration.sInfected = -1 -> -1 + 0 -> -1 + 1 -> 0 + -2 -> 0 + 2 -> 0 + -3 -> 0 + 3 -> 1 + -4 -> 1
+    Configuration.sRecovered = -1 -> 0 + 0 -> 0 + 1 -> 1+ -2 -> 1 + 2 -> 1 + -3 -> 1 + 3 -> 2 + -4 -> 2
+    Configuration.sVaccinated = -4 -> -4 + -3 -> -4 + -2 -> -4 + -1 -> -4 + 0 -> -4 + 1 -> -4 + 2 -> -4 + 3 -> -4
+    no Configuration.sDead
+    Configuration.sCutoff = `T24
+}
+
 // Attempt to find a trace that starts with some infection, 
 // and it lasts for at least one state, then dies out!
 pred novelTraces {
@@ -132,11 +152,6 @@ pred fastDeathTraces {
     Configuration.sCutoff = `T7
     /* 1 */ some i, j: Int { i -> j in Simulation.infected }
     /* 2 */ next_state { some i, j: Int { i -> j in Simulation.infected } }
-
-    // /* 3 */ next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
-    // /* 4 */ next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
-    // /* 5 */ next_state next_state next_state next_state { some i, j: Int { i -> j in Simulation.infected } }
-    // Steps before all dead, still decidiing how many necessary
 
     eventually { 
         no Simulation.infected
@@ -222,6 +237,33 @@ finiteTrace3: run {
 
 } for Timeline25
 
+workingGliderSmallTrace: run {
+    workingGliderSmallSeed
+    initState
+    always {
+        wellformed
+        timestep[Configuration.sCutoff]
+    }
+} for Timeline25
+
+workingGliderBigTrace: run {
+    workingGliderBigSeed
+    initState
+    always {
+        wellformed
+        timestep[Configuration.sCutoff]
+    }
+} for Timeline25
+
+gliderVaxWallTrace: run {
+    gliderVaxWallSeed
+    initState
+    always {
+        wellformed
+        vaxTimestep[Configuration.sCutoff]
+    }
+} for Timeline25
+
 novelTrace: run {
 
     novelTraces
@@ -293,16 +335,29 @@ pred commonColdSeed {
     }
 
     always { no Simulation.dead }
+    eventually { no Simulation.infected }
     initState
-
-    Configuration.sCutoff = `T15
+    Configuration.sCutoff = `T11
 }
 
 commonColdDeadTraces: run {
     commonColdSeed
     
-    always { deadTimestep[Configuration.sCutoff ]}
-    eventually { no Simulation.infected }
+    always { timestep[Configuration.sCutoff ]}
+} for Timeline25
+
+pred constantInfectionRate { -- unsat
+
+    always { no Simulation.dead }
+    always { #{Simulation.infected} = 3}
+    initState
+    Configuration.sCutoff = `T11
+}
+
+constantInfectionRateTraces: run {
+    constantInfectionRate
+    
+    always { timestep[Configuration.sCutoff ]}
 } for Timeline25
 
 // This is trivially unsat if any vax exist, and is identical to the dead case otherwise!
@@ -316,10 +371,10 @@ commonColdDeadTraces: run {
 // TRACES WE WANT:
 -- Finite length X Traces --> done
 -- Cyclic Traces (is this same as oscilattors?)
--- Fast Death Traces
+-- Fast Death Traces --> done-ish, can tweak!!
 -- NoVax vs Vax
 -- "Herd Immunity" (vax seed prevents spread)
--- Disease that infects everyone but nobody dies
+-- Disease that infects everyone but nobody dies --> done
 
 // ????
 -- Gliders??
