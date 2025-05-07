@@ -29,12 +29,13 @@ inst Timeline25 {
 }
 
 inst Timeline8 {
-  Timestamp = `T0 + `T1 + `T2 + `T3 + `T4 + `T5 + `T6 + `T7 + `Unreachable
+    Timestamp = `T0 + `T1 + `T2 + `T3 + `T4 + `T5 + `T6 + `T7 + `Unreachable
 
     next = `T0 -> `T1  + `T1  -> `T2  + `T2  -> `T3  + `T3  -> `T4 +
     `T4 -> `T5  + `T5  -> `T6  + `T6  -> `T7  + `T7  -> `T0 + `Unreachable -> `Unreachable
     
     // Limit ints to -4 thru 3 (bit-width 8)
+    #Int = 3
 }
 
 -- stable seed, population recovers fully within 8 steps
@@ -204,35 +205,30 @@ pred cyclicTraces {
 }
 
 pred oscillator {
-
     no Configuration.sRecovered
     no Configuration.sDead
     no Configuration.sVaccinated
-    Configuration.sCutoff = `T7
+    #Configuration.sInfected = 2
 
     initState
-
+    
+    Configuration.sCutoff = `T7
     always {
-        timestep[Configuration.sCutoff]
-        wellformed
-        no Simulation.protected
-        no Simulation.vaccinated
+
+        wellformedDead
+        vaxTimestep[Configuration.sCutoff]
         no Simulation.dead
         some Simulation.infected
         some Simulation.susceptible
-    }
 
-    next_state {
-        (Simulation.infected != Configuration.sInfected) or
-        (Simulation.recovered != Configuration.sRecovered) or
-        (Simulation.susceptible != Configuration.sSusceptible)
     }
 
     eventually {
-        Simulation.infected = Configuration.sInfected
-        Simulation.recovered = Configuration.sRecovered
-        Simulation.susceptible = Configuration.sSusceptible
-        Simulation.timestep != `T0
+        next_state { 
+            Simulation.infected = Configuration.sInfected
+            Simulation.recovered = Configuration.sRecovered
+            Simulation.susceptible = Configuration.sSusceptible
+        }              
     }
 }
 
@@ -257,8 +253,10 @@ pred coreTracesInfectious {
 pred coreTracesRecoveryLong {
     zigSeed
     initState
+    no Configuration.sVaccinated
+    no Configuration.sDead
     always { 
-        wellformed
+        wellformedDead
         recoveryTimestep[Configuration.sCutoff] 
     }
 }
@@ -269,7 +267,7 @@ pred coreTracesdead {
     no Configuration.sVaccinated
     no Configuration.sDead
     always { 
-        wellformed
+        wellformedDead
         deadTimestep[Configuration.sCutoff] 
     }
 }
@@ -414,16 +412,21 @@ pred commonColdSeed {
         }
     }
 
-    always { no Simulation.dead }
+    always { 
+        no Simulation.dead
+        no Simulation.vaccinated
+    }
+
     eventually { no Simulation.infected }
     initState
+    #Configuration.sInfected = 3
     Configuration.sCutoff = `T11
 }
 
 commonColdDeadTraces: run {
     commonColdSeed
     
-    always { deadTimestep[Configuration.sCutoff ]}
+    always { recoveryTimestep[Configuration.sCutoff] }
 } for Timeline25
 
 pred constantInfectionRate { -- unsat
