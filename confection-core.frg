@@ -83,23 +83,35 @@ pred wellformedDead {
 
 -- returns number of neighbors that are infected for a cell
 fun numInfNeighbors[row, col: Int]: Int {
-    #{
+    let hasNeighbors = {
         ((
             (add[row, -1] + row + add[row, 1]) -> 
             (add[col, -1] + col + add[col, 1])
         ) - (row->col))
         & Simulation.infected
+    } | {
+        no hasNeighbors => 0
+        else {
+            #{hasNeighbors} = 0 => -1
+            else #{hasNeighbors}
+        }
     }
 }
 
 -- returns number of neighbors that are vaccinated for a cell
 fun numVaxNeighbors[row, col: Int]: Int {
-    #{
+    let hasNeighbors = {
         ((
             (add[row, -1] + row + add[row, 1]) -> 
             (add[col, -1] + col + add[col, 1])
         ) - (row->col))
         & Simulation.vaccinated
+    } | {
+        no hasNeighbors => 0
+        else {
+            #{hasNeighbors} = 0 => -1
+            else #{hasNeighbors}
+        }
     }
 }
 

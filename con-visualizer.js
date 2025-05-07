@@ -1,6 +1,6 @@
 // ────── CONSTANTS ────────────────────────────────────────────────
 const GRID_SIZE = 8;      
-const CELL_SIZE = 35;    
+const CELL_SIZE = 60;    
 const GRID_XY = {x: 50, y: 50}; 
 const STATE_COL = {
     susceptible: "#8E8E8E",
@@ -8,7 +8,7 @@ const STATE_COL = {
     recovered: "#00C96B",
     dead: "#000000",
     vaccinated: "#0093D5",
-    protected: "#a000c8"
+    protected: "#89CFF0"
 };
 
 const BUTTONS = {
