@@ -442,6 +442,39 @@ constantInfectionRateTraces: run {
     always { timestep[Configuration.sCutoff ]}
 } for Timeline25
 
+pred partialDieOutSeed {
+    (-2->-2 + 0->0 + 2->2) in Configuration.sInfected
+    Configuration.sCutoff = `T15
+    // no Configuration.sVaccinated
+    no Configuration.sRecovered
+    // no Configuration.sDead
+}
+partialDieOutTrace: run {
+    partialDieOutSeed
+    initState
+    always {
+        wellformed deadTimestep[Configuration.sCutoff]
+        some Simulation.dead
+        some Simulation.susceptible
+        eventually { no Simulation.infected }
+    }
+} for Timeline25
+
+pred checkerboardSeed {
+    Configuration.sInfected = -1->-1 + 0->0 + 1->1 + -1->1 + 1->-1
+    Configuration.sRecovered = -1->0 + 0->1 + 1->0 + 0->-1
+    Configuration.sCutoff = `T24
+}
+
+-- this seed produces an indefinite oscillator in the base SIR ruleset
+checkerboardTrace: run {
+    checkerboardSeed
+    initState
+    always {
+        wellformed timestep[Configuration.sCutoff]
+    }
+} for Timeline25 
+
 // This is trivially unsat if any vax exist, and is identical to the dead case otherwise!
 // commonColdVaxTraces: run {
 //     commonColdSeed
