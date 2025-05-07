@@ -7,7 +7,7 @@ open "confection-traces.frg"
     This file contains tests for our model logic. 
 */
 
--- tinier version of timeline26 for testing purposes
+-- tinier version of Timeline25 for testing purposes
 inst Timeline3 {
   Timestamp = `T0 + `T1 + `T2 + `Unreachable
   next = `T0 -> `T1  + `T1  -> `T2  + `T2  -> `T0 + `Unreachable -> `Unreachable
@@ -215,7 +215,7 @@ test suite for timestep {
     coreTracesWellformed: assert {
         wellformed
         coreTraces
-    } is sufficient for alwaysWellformed for timeline26
+    } is sufficient for alwaysWellformed for Timeline25
 
     timestepAlwaysWellformed: assert { 
         initState 

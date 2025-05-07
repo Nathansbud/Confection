@@ -242,7 +242,7 @@ fastDeathTrace: run {
         deadTimestep[Configuration.sCutoff] 
     }
 
-} for timeline26
+} for Timeline25
 
 ChaoticTrace1: run {
 
