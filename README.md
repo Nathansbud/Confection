@@ -6,7 +6,8 @@ We arrived at our project idea from two different angles: an interest in the cel
 
 These dual interest led us to create a series of cellular models, pairing **Temporal Forge** with a custom visualizer to explore the evolution of various toy "diseases" under varied configurations and introducing multiple complicating factors (death, vaccinations, recovery windows, ...).
 
-[#TODO: please put an interesting trace gif here]()
+<!-- feel free to replace w another random gif!! -->
+<img src="./media/vaxglider.gif" width="200" height="250"/>
 
 Our goal with this project was largely exploratory rather than entering aiming to solve a specific sub-problem or find a "single" answer. Instead, as we investigated, we devised various hypotheses related to our diseases; as a sample:
 
@@ -61,7 +62,6 @@ Another limitation around from our use of Temporal Forge, as lasso traces aren't
 
 We created a custom visualizer to support stepping through the iterations of a given simulation, which maps the members of each set to its corresponding, colored grid cell:
 
-<!-- ![Visualizer Explanation](./media/viz-explanation.png) -->
 <div align="center">
     <img src="./media/viz-explanation.png" width="300" height="350"/>
 </div>
@@ -78,10 +78,8 @@ Additionally, a label at the top of the visualizer notes the current timestep, a
 An instance of the model under a given run finds a simulation that meets all the provided criteria: for example, if the condition being searched for was a model that lasts at least some number of iterations without any cells dying, then a satisfying example would show the evolution of that desired model. Conversely, an _unsat_ result would suggest that, for the given criteria being searched for, no such model exists. 
 
 ## Goals & Findings
-
-<!-- TODO -->
-Did your goals change at all from your proposal? Did you realize anything you planned was unrealistic, or that anything you thought was unrealistic was doable?
-
+<!-- # TODO: Ishika & Yali...good luck 🙏 -->
+<!-- # Basically: for every trace that is interesting, formulate a hypothesis that seems marginally interesting ("can we find a trace where ..." and then attach the relevant gif + name the trace that exhibits that behavior) -->
 Our goal from the outset was not to prove a specific theorem or simulate a real-world disease, but rather to explore the expressive capacity of cellular automata-based disease models using formal methods. Specifically, we sought to understand the kinds of dynamic, emergent behaviors we could model from a relatively simple and deterministic rule set. As we iterated on our model, we were able to achieve all our foundational and target goals we set out in our project proposal, as well as implement the additional `dead` and `vaccinated` states which were described in our reach goal. These extensions allowed us to experiment with a much richer space of epidemiological behaviors, going beyond simple infection-recovery loops. Over the course of the project, we designed and successfully generated a diverse suite of traces, including but not limited to:
 
 * **Gliders**: 
@@ -92,9 +90,19 @@ Our goal from the outset was not to prove a specific theorem or simulate a real-
     We were able to find traces where the shape of infection spread wouldn't change but instead just move vertically forever. `workingGliderSmallTrace` and `workingGliderBigTrace` were implemented using our `timestep` predicate, and `gliderVaxWallTrace` was implemented using `vaxTimestep` to allow for `vaccinated` and `protected` states. 
 
     <img src="./media/glider1.gif" width="200" height="250"/>
+    <img src="./media/vaxglider.gif" width="200" height="250"/>
 
-# TODO: Ishika & Yali...good luck 🙏
-<!-- # Basically: for every trace that is interesting, formulate a hypothesis that seems marginally interesting ("can we find a trace where ..." and then attach the relevant gif + name the trace that exhibits that behavior) -->
+    Interestingly, we see that only 4 cells need to be vaccinated in order to provide a 'herd immunity' effect to their surrounding cells, stopping the infection glider from persisting!
+
+* **Oscillators**:
+    _Guiding Questions_: Can we generate configurations that repeat indefinitely without reaching a fixed point? Can we find a system where there is a periodic infection pattern?
+
+    _Relevant Traces_: `checkerboardTrace`, `oscillatorTrace`
+
+    Using `checkerboardTrace` we were able to find a period-3 oscillator following the `timestep` ruleset!
+
+    <img src="./media/oscillator1.gif" width="200" height="250"/>
+
 
 ## Further Avenues
 
