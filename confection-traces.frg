@@ -7,6 +7,11 @@ option max_tracelength 26
 // option solver Glucose
 // option bitwidth 3
 
+/*
+    This file contains traces we explored and ran based on the model we created
+    in cofection-core.frg
+*/
+
 -- partial instance to define sequence of time stamps. 
 -- next relation ensures theres a loop the sequence to work with temporal forge
 -- optimizes with the solver for fast trace times
@@ -495,6 +500,7 @@ vaxLeakTrace: run {
     }
 } for Timeline25 
 
+
 // This is trivially unsat if any vax exist, and is identical to the dead case otherwise!
 // commonColdVaxTraces: run {
 //     commonColdSeed
@@ -502,14 +508,4 @@ vaxLeakTrace: run {
 //     always { vaxTimestep[Configuration.sCutoff ]}
 //     eventually { no Simulation.infected }
 // } for Timeline25
-
-// TRACES WE WANT:
--- Finite length X Traces --> done
--- Cyclic Traces (is this same as oscilattors?) -> we have a glider / no-vax glider, but no real "oscillators"
--- Fast Death Traces --> done-ish, can tweak!!
--- NoVax vs Vax --> done - ish
--- Disease that infects everyone but nobody dies --> in progress
-
-// ????
--- Gliders --> done
 

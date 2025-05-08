@@ -1,5 +1,10 @@
 #lang forge/temporal
 
+/*
+    This file contains the logic for our cellular automata based 
+    epidemic model.
+*/
+
 sig Timestamp { 
     next: lone Timestamp 
 }
@@ -195,11 +200,6 @@ pred deadTimestep[cutoff: Timestamp] {
                 // Susceptible cells ignore newInfected and newDead
                 (Simulation.susceptible - newInfected)
             )
-
-            // @ Ishika or Yali is there a better way to do this lol, I tried to do 
-            //      Simulation.incubation'[newInfected] = 1
-            //      all s: stayInfected { Simulation.incubation'[s] = add[1, Simulation.incubation[s]] }
-            // ... but that did not work :(
             
             // ...increase / initialize incubations
             all i, j: Int {
@@ -249,11 +249,6 @@ pred vaxTimestep[cutoff: Timestamp] {
                 (Simulation.susceptible - usedInfected)
             )
 
-            // @ Ishika or Yali is there a better way to do this lol, I tried to do 
-            //      Simulation.incubation'[newInfected] = 1
-            //      all s: stayInfected { Simulation.incubation'[s] = add[1, Simulation.incubation[s]] }
-            // ... but that did not work :(
-            
             // ...increase / initialize incubations
             all i, j: Int {
                 (i -> j) in Simulation.infected' => {
@@ -304,12 +299,6 @@ pred recoveryTimestep[cutoff: Timestamp] {
                 // Susceptible cells ignore newInfected and newDead
                 (Simulation.susceptible - usedInfected)
             )
-
-            // @ Ishika or Yali is there a better way to do this lol, I tried to do 
-            //      Simulation.incubation'[newInfected] = 1
-            //      all s: stayInfected { Simulation.incubation'[s] = add[1, Simulation.incubation[s]] }
-            // ... but that did not work :(
-            
             // ...increase / initialize incubations
             all i, j: Int {
                 (i -> j) in Simulation.infected' => {
@@ -322,7 +311,6 @@ pred recoveryTimestep[cutoff: Timestamp] {
                     no Simulation.incubation'[i][j]
                 } 
 
-                // I do not believe in this but who knows
                 (i -> j) in Simulation.recovered' => {
                     (i -> j) in Simulation.recovered => {
                         Simulation.bounceback'[i][j] = add[1, Simulation.bounceback[i][j]]
