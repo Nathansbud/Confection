@@ -10,6 +10,7 @@ These dual interest led us to create a series of cellular models, pairing **Temp
 <div align="center">
     <img src="./media/coverpage.gif" width="200" height="250"/> 
 </div>
+
 Our goal with this project was largely exploratory rather than entering aiming to solve a specific sub-problem or find a "single" answer. Instead, as we investigated, we devised various hypotheses related to our diseases; as a sample:
 
 * Can we find configurations which result in cyclic / "glider"-like behavior? 
@@ -18,7 +19,7 @@ Our goal with this project was largely exploratory rather than entering aiming t
 
 ...and so forth!
 
-## Model Design: Decisions & Explorations
+## Model Design: Decisions & Limitations
 
 We initially began our model with a base ruleset, a slight modification of the classic Game of Life rules:
 
@@ -49,15 +50,11 @@ However, we did encounter wraparound issues, where a grid-based simulation means
 
 Another limitation around from our use of Temporal Forge, as lasso traces aren't necessarily ideal for cellular automata modeling. For example, the Game of Life is famous for exhibiting chaotic, emergent behavior; while our model follows a different suite of rules, it too evolves rather chaotically. We decided to use a *timestamp* system that allowed us to add a "cutoff" point to our configuration, after which any timestep being used would simply do nothing (and force an "explicit" lasso point, even in traces that didn't necessarily exhibit periodic behavior). While we later modified this via partial traces, the underlying intuition remains the same.
 
+Further, as our investigation was largely "depth"-focused (i.e. iteratively adding rules which added new rules to the same ruleset, rather than experimenting with variants on the same rule), our hypotheses were primarily of the form "can we achieve X under *this* ruleset?" rather than "can we *find* a ruleset that achieves X?" Were we continue to exploring this model / expand our work in this domain, searching for novel rulesets in addition to configurations would be a potentially more interesting guiding approach. We could, for example, for example, attempt to synthesize diseases to finding the "deadliest" disease that still exhibits certain conditions, experimenting with infectiousness, different herd immunity conditions, and so forth. These variants are achievable explicitly by creating new timestep funtions, but as our focus was on how new rules affected the behavior of our simulations, we did not end up working as broadly as we could have.
+
 ### TODO: ADD ANYTHING THAT FEELS LIKE IT ADDRESSES THESE BETTER
 
 **What tradeoffs did you make in choosing your representation? What else did you try that didn’t work as well?**
-
-**What assumptions did you make about scope? What are the limits of your model?**
-
-## Testing
-
-### TODO
 
 ## Interpreting Results
 
@@ -79,8 +76,7 @@ Additionally, a label at the top of the visualizer notes the current timestep, a
 An instance of the model under a given run finds a simulation that meets all the provided criteria: for example, if the condition being searched for was a model that lasts at least some number of iterations without any cells dying, then a satisfying example would show the evolution of that desired model. Conversely, an _unsat_ result would suggest that, for the given criteria being searched for, no such model exists. 
 
 ## Goals & Findings
-<!-- # TODO: Ishika & Yali...good luck 🙏 -->
-<!-- # Basically: for every trace that is interesting, formulate a hypothesis that seems marginally interesting ("can we find a trace where ..." and then attach the relevant gif + name the trace that exhibits that behavior) -->
+
 Our goal from the outset was not to prove a specific theorem or simulate a real-world disease, but rather to explore the expressive capacity of cellular automata-based disease models using formal methods. Specifically, we sought to understand the kinds of dynamic, emergent behaviors we could model from a relatively simple and deterministic rule set. As we iterated on our model, we were able to achieve all our foundational and target goals we set out in our project proposal, as well as implement the additional `dead` and `vaccinated` states which were described in our reach goal. These extensions allowed us to experiment with a much richer space of epidemiological behaviors, going beyond simple infection-recovery loops. Over the course of the project, we designed and successfully generated a diverse suite of traces, including but not limited to:
 
 * **Gliders**: 
@@ -141,11 +137,11 @@ Our goal from the outset was not to prove a specific theorem or simulate a real-
 
 <!-- add more pls !!! -->
 
+## Testing
 
+Our test suite focuses on each of the core elements of our system: neighbor computation / toroidal boundary conditions, wellformedness, initialization, and crucially, our timesteps.
 
-## Further Avenues
-
-#### TODO what else would we do given infinite time / more effort?
+<!-- TODO...└[•-•]┘ -->
 
 ## Due Credit
 
