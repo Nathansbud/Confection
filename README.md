@@ -2,6 +2,8 @@
 **A Cellular Automata Approach to Disease Modeling**<br>*Ishika Tulsian, Yali Sommer, and Zack Amiton*
 <hr>
 
+[`[Video Demo]`](media/ConfectionDemoVid.mp4)
+
 We arrived at our project idea from two different angles: an interest in the cellular automata and extensions on the Game of Life (e.g. HighLife, [Brian's Brain](https://en.wikipedia.org/wiki/Brian%27s_Brain)) on the one hand, and epidemiological models like disease models like [SIR](https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology) on the other. 
 
 These dual interest led us to create a series of cellular models, pairing **Temporal Forge** with a custom visualizer to explore the evolution of various toy "diseases" under varied configurations and introducing multiple complicating factors (death, vaccinations, recovery windows, ...).
