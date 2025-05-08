@@ -7,8 +7,9 @@ We arrived at our project idea from two different angles: an interest in the cel
 These dual interest led us to create a series of cellular models, pairing **Temporal Forge** with a custom visualizer to explore the evolution of various toy "diseases" under varied configurations and introducing multiple complicating factors (death, vaccinations, recovery windows, ...).
 
 <!-- feel free to replace w another random gif!! -->
-<img src="./media/vaxglider.gif" width="200" height="250"/>
-
+<div align="center">
+    <img src="./media/coverpage.gif" width="200" height="250"/> 
+</div>
 Our goal with this project was largely exploratory rather than entering aiming to solve a specific sub-problem or find a "single" answer. Instead, as we investigated, we devised various hypotheses related to our diseases; as a sample:
 
 * Can we find configurations which result in cyclic / "glider"-like behavior? 
@@ -102,6 +103,44 @@ Our goal from the outset was not to prove a specific theorem or simulate a real-
     Using `checkerboardTrace` we were able to find a period-3 oscillator following the `timestep` ruleset!
 
     <img src="./media/oscillator1.gif" width="200" height="250"/>
+
+* **Finite-Length Traces**:
+    _Guiding Questions_: Can we construct a disease that evolves and fully resolves (no infected cells remain) within a bounded number of timesteps?
+
+    _Relevant Traces_: `finiteTrace1`, `finiteTrace2`, `finiteTrace3`, `novelTrace`
+    
+    By reducing our search space by making the board 8 x 8, we were able to use `novelTrace` to find initial configurations that would satisfy the end goal of `eventually { no Simulation.infected }`. We also created our own seeds that satisfied these conditions in `finiteTrace1`, `finiteTrace2` and `finiteTrace3`. Here are some examples:
+
+    <img src="./media/finite1.gif" width="200" height="250"/>
+    <img src="./media/finite2.gif" width="200" height="250"/>
+    <img src="./media/finite3.gif" width="200" height="250"/>
+
+    Once we found these finite traces, we decided to see if these initial configurations would hold as finite traces for a ruleset that mimics a more infectious disease (described by `timestepMoreInfectious`) as well as if it would recover the population quicker for a less infectious disease (described by `recoveryTimestep` where cells stay `recovered` longer). We found that for the more infectious disease, the same configuration would lead to the entire population being infected, while for the less infectious, the population recovery rate was higher.
+
+    <img src="./media/infectiousfinite1.gif" width="200" height="250"/>
+    <img src="./media/recoveryfinite1.gif" width="200" height="250"/>
+
+
+* **Fast Death Traces**:
+    _Guiding Questions_: Is there some notion of lethal/deathly infectious disease? Can we find minimal seed infections that wipe out the entire population as fast as possible? 
+
+    _Relevant Traces_: `fastDeathTrace`
+
+    Within the logic for `fastDeathTrace`, we enforce that 
+    ```
+    eventually { 
+        no Simulation.infected
+        no Simulation.susceptible 
+        no Simulation.recovered
+    }
+    ```
+    which helps us find traces where the entire population dies. `fastDeathTrace` uses `deadTimestep` to incorporate the `dead` state ruleset. Here are some traces it found:
+
+    <img src="./media/fastdeath1.gif" width="200" height="250"/>
+    <img src="./media/fastdeath2.gif" width="200" height="250"/>
+
+<!-- add more pls !!! -->
+
 
 
 ## Further Avenues

@@ -148,8 +148,9 @@ pred fastDeathTraces {
     // Attempt to find most potent diseases, where all cells die in the shortest amount of time.
     no Configuration.sRecovered
     no Configuration.sVaccinated
-    #{Configuration.sInfected} < 3
-    #{Configuration.sDead} < 3 --dont seem to be owrking correctly, but do seem to restrict the num a bit?
+    no Configuration.sDead
+    #{Configuration.sInfected} in (1 + 2 + 3)
+    // #{Configuration.sDead} < 3 --dont seem to be owrking correctly, but do seem to restrict the num a bit?
     
     Configuration.sCutoff = `T7
     /* 1 */ some i, j: Int { i -> j in Simulation.infected }
