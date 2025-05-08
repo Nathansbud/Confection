@@ -300,7 +300,6 @@ pred stepDead { deadTimestep[Configuration.sCutoff] }
 
 test suite for deadTimestep {    
 
-    // todo: figure out some necessary/sufficiency assertions
     deadNoProtected: assert { no Simulation.protected } is necessary for stepDead
 
     -- timestamp correctly updates
@@ -346,16 +345,12 @@ test suite for deadTimestep {
         always { deadPreservedWellformed[Configuration.sCutoff] }
     } is sat for Timeline3 
 
-
-    // TODO: test incubation logic
 }
 
 -- helper pred for vaxTimestep testing
 pred stepVax { vaxTimestep[Configuration.sCutoff] }
 
 test suite for vaxTimestep {
-
-    // todo: add some more tests pls
 
     vaxTsUpdate: assert {
         initState
