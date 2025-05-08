@@ -61,7 +61,10 @@ Another limitation around from our use of Temporal Forge, as lasso traces aren't
 
 We created a custom visualizer to support stepping through the iterations of a given simulation, which maps the members of each set to its corresponding, colored grid cell:
 
-![Visualizer Explanation](./media/viz-explanation.png)
+<!-- ![Visualizer Explanation](./media/viz-explanation.png) -->
+<div align="center">
+    <img src="./media/viz-explanation.png" width="300" height="350"/>
+</div>
 
 * **Grey** cells correspond with `susceptible` cells
 * **Red** cells correspond with `infected` cells
@@ -78,6 +81,17 @@ An instance of the model under a given run finds a simulation that meets all the
 
 <!-- TODO -->
 Did your goals change at all from your proposal? Did you realize anything you planned was unrealistic, or that anything you thought was unrealistic was doable?
+
+Our goal from the outset was not to prove a specific theorem or simulate a real-world disease, but rather to explore the expressive capacity of cellular automata-based disease models using formal methods. Specifically, we sought to understand the kinds of dynamic, emergent behaviors we could model from a relatively simple and deterministic rule set. As we iterated on our model, we were able to achieve all our foundational and target goals we set out in our project proposal, as well as implement the additional `dead` and `vaccinated` states which were described in our reach goal. These extensions allowed us to experiment with a much richer space of epidemiological behaviors, going beyond simple infection-recovery loops. Over the course of the project, we designed and successfully generated a diverse suite of traces, including but not limited to:
+
+* **Gliders**: 
+    _Guiding Questions_: Could we find an initial configuration that led to self propagating infection clusters reminiscent of GoL gliders? If so, is there a way we get use `vaccinated` states to stop the spread of infection through such a glider? 
+
+    _Relevant Traces_: `workingGliderSmallTrace`, `workingGliderBigTrace`, `gliderVaxWallTrace`
+
+    We were able to find traces where the shape of infection spread wouldn't change but instead just move vertically forever. `workingGliderSmallTrace` and `workingGliderBigTrace` were implemented using our `timestep` predicate, and `gliderVaxWallTrace` was implemented using `vaxTimestep` to allow for `vaccinated` and `protected` states. 
+
+    <img src="./media/glider1.gif" width="200" height="250"/>
 
 # TODO: Ishika & Yali...good luck 🙏
 <!-- # Basically: for every trace that is interesting, formulate a hypothesis that seems marginally interesting ("can we find a trace where ..." and then attach the relevant gif + name the trace that exhibits that behavior) -->

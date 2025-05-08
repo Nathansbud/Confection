@@ -475,6 +475,25 @@ checkerboardTrace: run {
     }
 } for Timeline25 
 
+pred vaxLeakSeed {
+    Configuration.sInfected = 
+        0 -> 0 + 0 -> 1
+    Configuration.sVaccinated = 
+        -2 -> 0 + -1 -> 0 + 1 -> 0 + 2 -> 0
+        + 0 -> 2 + 0 -> -2 
+    no Configuration.sRecovered
+    no Configuration.sDead
+    Configuration.sCutoff = `T15
+}
+
+vaxLeakTrace: run {
+    vaxLeakSeed
+    initState
+    always {
+        wellformed vaxTimestep[Configuration.sCutoff]
+    }
+} for Timeline25 
+
 // This is trivially unsat if any vax exist, and is identical to the dead case otherwise!
 // commonColdVaxTraces: run {
 //     commonColdSeed
