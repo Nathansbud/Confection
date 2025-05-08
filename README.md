@@ -133,16 +133,16 @@ Our goal from the outset was not to prove a specific theorem or simulate a real-
     <img src="./media/fastdeath1.gif" width="200" height="250"/>
     <img src="./media/fastdeath2.gif" width="200" height="250"/>
 
-<!-- add more pls !!! -->
 
 ## Testing
 
-Our test suite focuses on each of the core elements of our system: neighbor computation / toroidal boundary conditions, wellformedness, initialization, and crucially, our timesteps.
-
-<!-- TODO...└[•-•]┘ -->
+All tests are in the `con.tests.frg` file. Our test suite focuses on each of the core elements of our system: neighbor computation / toroidal boundary conditions, wellformedness, initialization, and crucially, our timesteps. We do so using mainly property-based tests and using specific seed configurations to test for timestep properties. We could only really test properties and the behavior of our system using `assert` statements since we implemented our model in Temporal Forge.
 
 ## Due Credit
 
 * Andrew Wagner + Tim's [Forge Game of Life implementation](https://github.com/tnelson/Forge/blob/main/forge/examples/basic/gameOfLife.frg) was invaluable as a reference point for our initial explorations — we built out our [`conway.frg`](./conway/conway.frg) based on this!
 * Andrew's [senior thesis](https://cs.brown.edu/media/filer_public/1a/cd/1acd447b-1807-48c6-adf0-beef35a7b564/wagnerandrew.pdf) on synthesizing initial configuration served as a great source of inspiration (and is just a very cool read!), though we mostly heeded his warnings and stayed away from non-determinism :)
 * Brian (of [Brian's Brain](https://www.msevans.com/automata/briansbrain.html)) for his brain (which we also implemented in [`confection-old.frg`](./confection-old.frg)) 
+
+## Collaborators and Sharing
+© Ishika Tulsian, Yali Sommer, and Zack Amiton
